@@ -6,7 +6,7 @@
 [![LangChain][LangChain]][LangChain-url]
 [![Google Gemini][Google-Gemini]][Gemini-url]
 
-<div align="center" style='text-decoration: none; border: 3px solid black; padding-bottom: 30px; border-radius: 30px'>  
+<div align="center" style='text-decoration: none;'>  
   <p style='text-align: center; text-decoration: none'>
     <a style='text-decoration: none;' href=''><h1 style="font-size: 3.5em">Blind Spot</h1></a>
   </p>
@@ -14,27 +14,27 @@ Our CUNY Tech Prep 2025 Project by team Asteroid!
 </div>
 
 ## Who are we?
-pass
+glazing
 
 <br>
 
 ## What is Blind Spot?
-pass
+yapping
 
 <br>
 
-## What are the features?
-pass
-
-<br>
-
-## How did we make it?
-pass
+## What can it do?
+description
 
 <br>
 
 ## How can we use it?
-pass
+description
+
+<br>
+
+## How does it work?
+description and workflow diagram
 
 <br>
 
@@ -44,7 +44,7 @@ pass
 <br>
 
 ## What did we do to overcome them?
-pass
+locking in
 
 <br>
 
@@ -53,9 +53,8 @@ pass
 
 <br>
 
-
 ## Demo
-pass
+video
 
 <br>
 
