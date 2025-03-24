@@ -3,7 +3,7 @@
 # Blind Spot
 
 <div align="center">
-  <img src="assets/placeholder.webp" alt='logo' width=200>
+  <img src="./public/placeholder.webp" alt='logo' width=200>
   <h1>AI-Powered World Description App</h1>
 </div> <br>
 
@@ -39,7 +39,7 @@ The AI World Description App is designed to provide users with real-time descrip
 
 ### Model Workflow
 <div align="center">
-  <img src="assets/placeholder.webp" alt='flowchart' width=400>
+  <img src="./public/placeholder.webp" alt='flowchart' width=400>
 </div> <br>
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
@@ -127,7 +127,9 @@ To get a local copy of BlemishBot up and running locally follow these steps:
 
 
 ## Demo
-  
+<div align="center">
+  <img src="./public/placeholder.webp" alt="demo video" width=400>
+</div>
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
