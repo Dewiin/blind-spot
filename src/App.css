@@ -1,11 +1,11 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 0;
+  background-color: white;
+  
 }
 
-.logo {
+/* .logo {
   height: 6em;
   padding: 1.5em;
   will-change: filter;
@@ -16,8 +16,64 @@
 }
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
-}
+} */
 
+.wholePage{
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  gap: 1rem; 
+  width: 100vw;
+  height: 100vh;
+  gap: 0;
+}
+.infoBar{
+  height: 75px;
+  width: 100%;
+  background-color: rgb(180, 180, 180);
+}
+.infoBar img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  
+}
+.mainBody{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.mainBody img{
+  width: 50%;
+  height: 50%;
+  object-fit: contain;
+}
+body{
+  color: black;
+}
+.textSection{
+  height: 50%;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+.buttonSection{
+  height: 100%;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.h2{
+  font-family: 'Courier New', monospace;
+  font-size: medium;
+  
+}
+/* 
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -39,4 +95,4 @@
 
 .read-the-docs {
   color: #888;
-}
+} */
