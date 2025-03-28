@@ -61,6 +61,14 @@ body{
   padding: 20px;
   box-sizing: border-box;
 }
+.textSection h2{
+  font-family: 'Arial', monospace;
+  font-weight: bold;
+  color: #000000;
+}
+.textSection p{
+  font-family: 'Arial', monospace;
+}
 .buttonSection{
   height: 100%;
   width: 100%;
@@ -68,6 +76,7 @@ body{
   align-items: center;
   text-align: center;
 }
+
 /* 
 @keyframes logo-spin {
   from {

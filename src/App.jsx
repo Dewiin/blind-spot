@@ -36,7 +36,8 @@ function App() {
         <div className="mainBody">
           <div className="textSection">
             <h2>What is arround?</h2>
-           <p>Click in the button and we will describe it for you...</p> 
+           <p>Say something or click on the button and we will describe it for you...</p> 
+
             
           </div>
           <div className="buttonSection">
