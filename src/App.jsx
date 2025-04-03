@@ -19,14 +19,11 @@ function App() {
             <h2>What is arround?</h2>
            <p>Say something or touch the screen and we will describe it for you...</p> 
           </div>
-          <div className="buttonSection">
+          <div className="cameraSection">
           <CameraFeed></CameraFeed>
-            {/* <img src="src/images/button.png" alt="Description of the image" /> */}
-            </div>
+          </div>
         </div>
-    
       </div>
-
     </>
   )
 }
