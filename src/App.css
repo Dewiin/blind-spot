@@ -27,7 +27,7 @@
   gap: 0;
 }
 .infoBar{
-  height: 75px;
+  height: 10vh;
   width: 100%;
   background-color: rgb(77, 106, 134);
   padding: 10px;
@@ -54,7 +54,11 @@
 body{
   color: rgb(0, 0, 0);
 }
+
 .textSection{
+  font-size: calc(1em + 1vw);
+
+
   height: 50%;
   width: 100%;
   justify-content: center;
