@@ -11,7 +11,7 @@ function App() {
   return (
     <>
       <div className="wholePage">
-        <div className="infoBar">
+        <div className="infoBar"> 
           <img src="src/images/asteroid.png" alt="Description of the image" />
         </div>
         <div className="mainBody">
