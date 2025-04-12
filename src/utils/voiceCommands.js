@@ -1,9 +1,9 @@
 import annyang from "annyang";
 
-export function voiceCommands(onCommandTrigger) {
+export function voiceCommands( {describeScene} ) {
     if (annyang) {
         const commands = {
-        "describe (the scene)": onCommandTrigger,
+            "describe (the scene)": describeScene,
         };
 
         annyang.addCommands(commands);
