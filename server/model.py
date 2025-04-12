@@ -13,6 +13,10 @@ model = VisionEncoderDecoderModel.from_pretrained(model_name)
 feature_extractor = ViTImageProcessor.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
+# Use GPU if available.
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
+
 @app.route("/caption", methods=["POST"])
 def caption():
     if "image" not in request.files:
