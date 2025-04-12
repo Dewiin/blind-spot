@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { voiceCommands } from "../utils/voiceCommands";
+import { ControlPanel } from "./ControlPanel";
 
 export function CameraFeed() {
-  const videoRef = useRef();
+  const videoRef = useRef(null);
   const [snapshot, setSnapshot] = useState(null);
   
   async function startCamera() {
@@ -41,9 +42,14 @@ export function CameraFeed() {
   useEffect(() => {
     startCamera();
     voiceCommands({ describeScene });
-  }, []);
+  });
 
   return (
-    <video ref={videoRef} width="100%" height="auto" />
+    <>
+      <div className="live-feed-recording">
+        <video ref={videoRef} width='100%' height='auto'/>
+      </div>
+      <ControlPanel describeScene={describeScene}></ControlPanel>
+    </>
   );
 }
