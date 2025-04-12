@@ -52,4 +52,7 @@ export function CameraFeed() {
       <ControlPanel describeScene={describeScene}></ControlPanel>
     </>
   );
-}
+};
+
+
+```
