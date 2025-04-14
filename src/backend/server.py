@@ -56,7 +56,7 @@ def get_prompt():
                 the surroundings and tune it based on the description you gave earlier, an example of a one would be a clear path ahead, and an example of a five would be a busy
                 crowd, so imagine the streets of the Shibuya Crossing in Tokyo, Japan, or the streets of New York City, New York, USA.
                 
-                Output a string of the description and an in for the importance level.
+                Output a string of the description and an int for the importance level.
             '''
         ),
         ("human", [
