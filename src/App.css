@@ -86,7 +86,37 @@ body{
   align-items: center;
   text-align: center;
 }
+.tvContainer {
+  height: 100%;
+  width: 100%;
+ 
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background-image: url('./images/TVframe.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 90%;
+  
 
+}
+
+/* CameraFeed should fill the TV screen part */
+.tvContainer video {
+  position: absolute;
+
+
+  top: 20%;     /* move down from top */
+  left: 14%;    /* move in from left */
+  width: 72%;   /* width of the screen area */
+  height: 60%;  /* height of the screen area */
+
+  object-fit: cover;
+  border-radius: 8px; /* optional: makes corners smooth */
+  z-index: 1;
+}
 /* 
 @keyframes logo-spin {
   from {

@@ -13,8 +13,8 @@ function App() {
             <h2>Header</h2>
            <p>Say "Describe (the scene)"</p> 
           </div>
-          <div className="cameraSection">
-          <CameraFeed></CameraFeed>
+          <div className="tvContainer">
+            <CameraFeed></CameraFeed>
           </div>
         </div>
       </div>
