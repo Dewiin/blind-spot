@@ -6,12 +6,12 @@ function App() {
     <>
       <div className="wholePage">
         <div className="infoBar"> 
-          <img src="src/images/asteroid.png" alt="Description of the image" />
+          <img src="src/images/asteroid.png" alt="Logo goes here" />
         </div>
         <div className="mainBody">
           <div className="textSection">
-            <h2>What is arround?</h2>
-           <p>Say something or touch the screen and we will describe it for you...</p> 
+            <h2>Header</h2>
+           <p>Say "Describe (the scene)"</p> 
           </div>
           <div className="cameraSection">
           <CameraFeed></CameraFeed>
