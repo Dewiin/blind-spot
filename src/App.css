@@ -29,7 +29,60 @@
   border-radius: 20px;
 }
 
-.control-panel {
-  height: 100%; 
-  width: 100vw;
+
+.textSection{
+  font-size: calc(1em + 1vw);
+
+
+  height: 50%;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  box-sizing: border-box;
+  
 }
+.textSection h2{
+  font-family: 'Arial', monospace;
+  font-weight: bold;
+  color: #000000;
+}
+.textSection p{
+  font-family: 'Arial', monospace;
+  color: #000000;
+}
+.cameraSection{
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* 
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+} */
+
