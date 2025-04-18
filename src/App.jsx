@@ -6,12 +6,11 @@ function App() {
     <>
       <div className="wholePage">
         <div className="infoBar"> 
-          <img src="src/images/asteroid.png" alt="Logo goes here" />
+          <img src="src/images/Logo.png" alt="Logo goes here" />
         </div>
         <div className="mainBody">
           <div className="textSection">
-            <h2>Header</h2>
-           <p>Say "Describe (the scene)"</p> 
+   
           </div>
           <div className="tvContainer">
             <CameraFeed></CameraFeed>

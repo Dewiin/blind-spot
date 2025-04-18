@@ -1,7 +1,7 @@
 #root {
   margin: 0 auto;
   padding: 0;
-  background-color: white;
+
   
 }
 
@@ -20,16 +20,16 @@
 .wholePage{
   display: flex;
   flex-direction: column;
-  background-color: rgb(236, 235, 235);
+ 
   gap: 1rem; 
   width: 100vw;
   height: 100vh;
   gap: 0;
 }
 .infoBar{
-  height: 10vh;
+  height: 23vh;
   width: 100%;
-  background-color: rgb(134, 135, 135);
+  /* background-color: rgb(175, 175, 175); */
   padding: 10px;
   box-sizing: border-box;
 }
@@ -94,11 +94,7 @@ body{
   justify-content: center;
   align-items: center;
   text-align: center;
-  background-image: url('./images/TVframe.png');
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 90%;
+  
   
 
 }
