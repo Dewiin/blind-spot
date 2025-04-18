@@ -9,13 +9,17 @@ export function CameraFeed() {
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log("Camera Stream:", stream); // Log the stream to ensure it's received
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
+        videoRef.current.srcObject = stream; // Set the video element's stream
+        console.log("Stream assigned to video element");
       }
     } catch (error) {
       console.error("Error accessing the camera:", error);
+      alert("Please grant camera access for the app to work.");
     }
-  };
+  }
+  
 
   function takeSnapshot() {
     if (videoRef.current) {
@@ -47,8 +51,9 @@ export function CameraFeed() {
   return (
     <>
       <div className="live-feed-recording">
-        <video ref={videoRef} width='100%' height='auto'/>
+        <video ref={videoRef} width="100%" height="auto" autoPlay />
       </div>
+
       <ControlPanel describeScene={describeScene}></ControlPanel>
     </>
   );
