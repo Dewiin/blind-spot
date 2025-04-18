@@ -25,7 +25,6 @@ class description(BaseModel):
     @classmethod
     def schema(cls):
         schema = super().schema()
-        # You might need to adjust this based on exact requirements
         return schema
 
 class DescriptionHistory:
