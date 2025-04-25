@@ -15,6 +15,9 @@ import os
 
 load_dotenv()
 os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
+model = None
+parser = None
+history = None
 
 ## define pydantic maybe kinda???
 class description(BaseModel):
@@ -135,9 +138,16 @@ def favicon():
 @app.route('/describe', methods=['POST'])
 def describe_image():
     try:
-        model = get_model()
-        parser = get_parser()
-        history = DescriptionHistory()
+        global model
+        global parser
+        global history
+        
+        if model is None:
+            model = get_model()
+        if parser is None:
+            parser = get_parser()
+        if history is None:
+            history = DescriptionHistory()
         
         if 'image' not in request.files:
             return jsonify({"error": "No image provided"}), 400
@@ -162,9 +172,16 @@ def describe_image():
 @app.route('/describe_sequence', methods=['POST'])
 def describe_sequence():
     try:
-        model = get_model()
-        parser = get_parser()
-        history = DescriptionHistory()
+        global model
+        global parser
+        global history
+        
+        if model is None:
+            model = get_model()
+        if parser is None:
+            parser = get_parser()
+        if history is None:
+            history = DescriptionHistory()
         
         if 'images' not in request.files:
             return jsonify({"error": "No images provided"}), 400
