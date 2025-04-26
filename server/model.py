@@ -1,11 +1,14 @@
 # caption_server.py
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from transformers import VisionEncoderDecoderModel, ViTImageProcessor, AutoTokenizer
 import torch
 from PIL import Image
+import io
 
 app = Flask(__name__)
+CORS(app, resources={r"/caption": {"origins": "http://localhost:5173"}})
 
 # Load the model, processor, and tokenizer when the server starts.
 model_name = "nlpconnect/vit-gpt2-image-captioning"
