@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from typing import List, Dict
 from langchain_core.messages import AIMessage
 import os
+from flask_cors import CORS  # Import CORS
 
 load_dotenv()
 os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
@@ -120,6 +121,7 @@ def get_description(image_path: str, history, model, prompt, parser):
 
 ## send output
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/')
 def home():
