@@ -63,7 +63,7 @@ export function CameraFeed() {
             const formData = new FormData();
             formData.append('image', blob, 'snapshot.png');
 
-            const response = await fetch(`http://127.0.0.1:5001/describe`, {
+            const response = await fetch(`http://localhost:5001/describe`, {
               method: 'POST',
               body: formData,
           });

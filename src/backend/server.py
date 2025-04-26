@@ -121,7 +121,7 @@ def get_description(image_path: str, history, model, prompt, parser):
 
 ## send output
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 @app.route('/')
 def home():
@@ -216,4 +216,4 @@ if __name__ == "__main__":
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
     
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
