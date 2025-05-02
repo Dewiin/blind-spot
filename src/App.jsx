@@ -1,5 +1,6 @@
 import { CameraFeed } from './components/CameraFeed'
 import './App.css'
+import { ControlPanel } from './components/ControlPanel'
 
 function App() {
   return (
@@ -10,7 +11,7 @@ function App() {
         </div>
         <div className="mainBody">
           <img src="src/images/describe.png" alt="Logo goes here" width = "50%" />
-          <CameraFeed></CameraFeed>
+          <CameraFeed />
         </div>
       </div>
     </>

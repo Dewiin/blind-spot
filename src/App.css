@@ -5,7 +5,7 @@
 .wholePage {
   display: flex;
   flex-direction: column;
-  width: 100vw;
+  max-width: 720px;
   height: 100vh;
 }
 .infoBar {
@@ -27,4 +27,12 @@
 
 .mainBody video {
   border-radius: 20px;
+}
+
+.control-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
 }
