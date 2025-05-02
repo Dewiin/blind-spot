@@ -230,7 +230,6 @@ export function CameraFeed() {
           aria-live="polite" 
           role="status"
         >
-          <h3>Scene Description</h3>
           <p>{lastDescription}</p>
         </div>
       )}
