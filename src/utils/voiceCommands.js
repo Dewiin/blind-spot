@@ -11,6 +11,9 @@ export async function voiceCommands( {describeScene} ) {
     if (annyang) {
         const commands = {
             "describe (the scene)": describeScene,
+            "describe": describeScene,
+            "what's happening": describeScene,
+            "jarvis (clip that)": describeScene
         };
 
         annyang.addCommands(commands);
