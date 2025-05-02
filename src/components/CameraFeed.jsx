@@ -5,7 +5,6 @@ import { ControlPanel } from "./ControlPanel";
 export function CameraFeed() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
-  const [snapshot, setSnapshot] = useState(null);
   const [isDescribing, setIsDescribing] = useState(false);
   const [lastDescription, setLastDescription] = useState("");
   const [cameraError, setCameraError] = useState(null);
@@ -61,7 +60,6 @@ export function CameraFeed() {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       const imageUrl = canvas.toDataURL("image/jpeg", 0.9); // JPEG with 90% quality for better performance
-      setSnapshot(imageUrl);
       return imageUrl;
     } catch (err) {
       console.error("Error taking snapshot:", err);

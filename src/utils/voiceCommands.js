@@ -13,6 +13,7 @@ export async function voiceCommands( {describeScene} ) {
             "describe (the scene)": describeScene,
             "describe": describeScene,
             "what's happening": describeScene,
+            "show me my blind spot": describeScene,
             "jarvis (clip that)": describeScene
         };
 
