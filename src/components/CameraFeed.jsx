@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { voiceCommands } from "../utils/voiceCommands";
 import { ControlPanel } from "./ControlPanel";
 
+
 export function CameraFeed() {
   const videoRef = useRef(null);
   const [snapshot, setSnapshot] = useState(null);
@@ -37,10 +38,51 @@ export function CameraFeed() {
     }
   };
 
-  function describeScene() {
-    takeSnapshot();
-    console.log("Describing the scene... (AI model integration pending)");
-  };
+  async function describeScene() {
+    const imageUrl = takeSnapshot();
+    console.log("Describing the scene...");
+
+    if (imageUrl) {
+        try {
+            // Convert base64 URL to Blob (as in the previous answer)
+            const base64Data = imageUrl.split(',')[1];
+            const byteCharacters = atob(base64Data);
+            const byteArrays = [];
+
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            const blob = new Blob(byteArrays, { type: 'image/png' });
+
+            const formData = new FormData();
+            formData.append('image', blob, 'snapshot.png');
+
+            const response = await fetch(`http://localhost:5001/describe`, {
+              method: 'POST',
+              body: formData,
+          });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Backend response:", data);
+            // Handle the response data
+
+        } catch (error) {
+            console.error("Error sending image to backend:", error);
+            alert("Failed to describe the scene.");
+        }
+    }
+};
+
 
   // Set up camera & voice commands on mount
   useEffect(() => {

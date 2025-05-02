@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from typing import List, Dict
 from langchain_core.messages import AIMessage
 import os
+from flask_cors import CORS  # Import CORS
 
 load_dotenv()
 os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY")
@@ -68,15 +69,15 @@ def get_prompt(history: DescriptionHistory = None):
                 The history context is:
                 {history}
                 
-                Imagine you are the personal assistant for a blind client, you need to describe what is in front of them with detail, in a way that they can understand and in a 
-                way that does not leave out any important details about the direction, placement, and proximity of items and people in their area. Try to keep the description to 
-                three sentences or less and talk to them casually, be extra cautious when describing to them and do not start off your response with: the image.
+                Imagine you are like a guide, you are to take in an image and describe the contents to a blind person, make sure your output is highlighting the obstacles and people in
+                their path so they do not have to run into any trouble. You are to return the description as a string and the importance level as an int. Tune your prompt to tell people of
+                obstacles in their path and use the history context to build off of the last output you gave.
                 
                 For each item in the output follow these guidelines:
                 - The description should be in detail and provide a clear and concise description of the image, do not try to make it too long, keep it to two sentences max, for your
                 description make sure to include the general direction of any important item you describe, also do not start off your response with: the image. In your response make
                 sure to respond about whether or not there is space to keep moving forward, if theres anyone or anything they could hit, or if there is any important path blocks
-                ahead.
+                ahead. Your description should revolve around safety so someone blind can understand the obstacles around them.
                 - The importance level should be a number between 1 and 10, where 1 is the least important and 10 is the most important. The importance level should be based on
                 the surroundings and tune it based on the description you gave earlier, an example of a one would be a clear path ahead, and an example of a five would be a busy
                 crowd, so imagine the streets of the Shibuya Crossing in Tokyo, Japan, or the streets of New York City, New York, USA.
@@ -84,7 +85,7 @@ def get_prompt(history: DescriptionHistory = None):
                 background knowledge to increase the accuracy and effectiveness of your response. The history contains your previous description, importance level, and the image path
                 if you want to refer back to it, try not to refer back the previous images all the time, only do it when necessary.
                 
-                Output a string of the description and an int for the importance level.
+                Output a string for the description and an int for the importance level.
             '''
         ),
         ("human", [
@@ -120,6 +121,7 @@ def get_description(image_path: str, history, model, prompt, parser):
 
 ## send output
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 @app.route('/')
 def home():
@@ -214,4 +216,4 @@ if __name__ == "__main__":
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
     
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5001, debug=True)
