@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { voiceCommands } from "../utils/voiceCommands";
 import { ControlPanel } from "./ControlPanel";
+import { speakText } from "../utils/textToSpeech"; // Import the new utility function
 
 export function CameraFeed() {
   const videoRef = useRef(null);
@@ -67,39 +68,6 @@ export function CameraFeed() {
     }
   }, []);
 
-  // Speech synthesis with proper handling
-  const speakDescription = useCallback((text) => {
-    if (!('speechSynthesis' in window)) {
-      console.warn("Speech synthesis not supported");
-      return false;
-    }
-
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Try to use a more natural voice if available
-    const voices = window.speechSynthesis.getVoices();
-    console.log("", voices);
-    const preferredVoice = voices.find(voice => voice.lang.includes('es-ES'));
-    
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-    }
-
-    utterance.rate = 1.20; // Slightly faster than default
-    utterance.pitch = 1;
-    utterance.onend = () => setIsDescribing(false);
-    utterance.onerror = (event) => {
-      console.error("Speech synthesis error:", event);
-      setIsDescribing(false);
-    };
-
-    window.speechSynthesis.speak(utterance);
-    return true;
-  }, []);
-
   // Improved scene description with proper API error handling
   const describeScene = useCallback(async () => {
     if (isDescribing) {
@@ -145,7 +113,12 @@ export function CameraFeed() {
       
       if (data.description) {
         setLastDescription(data.description);
-        speakDescription(data.description);
+        
+        // Use the extracted speech function and handle completion
+        speakText(data.description, () => setIsDescribing(false), (error) => {
+          console.error("Speech error:", error);
+          setIsDescribing(false);
+        });
       } else {
         setLastDescription("No description available for this scene.");
         setIsDescribing(false);
@@ -164,7 +137,7 @@ export function CameraFeed() {
       setLastDescription(`Error: ${errorMessage}`);
       setIsDescribing(false);
     }
-  }, [isDescribing, takeSnapshot, speakDescription]);
+  }, [isDescribing, takeSnapshot]);
 
   // Initialize camera and voice commands
   useEffect(() => {
@@ -172,6 +145,13 @@ export function CameraFeed() {
     
     // Initialize voice commands
     const cleanupVoice = voiceCommands({ describeScene });
+    
+    // Play welcome message only on first visit
+    const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
+    if (!hasVisitedBefore) {
+      speakText("Welcome to Blind-Spot, say describe, describe the scene, or tap the screent to get Started.");
+      sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
+    }
     
     // Cleanup function
     return () => {
