@@ -1,9 +1,7 @@
 <a name="readme-top"></a>
 
-# Blind Spot
-
 <div align="center">
-  <img src="./public/placeholder.webp" alt='logo' width=200>
+  <img src="./src/assets/Logo.png" alt='logo' width=300>
   <h1>AI-Powered World Description App</h1>
 </div> <br>
 
@@ -39,39 +37,40 @@ The AI World Description App is designed to provide users with real-time descrip
 
 ### Model Workflow
 <div align="center">
-  <img src="./public/placeholder.webp" alt='flowchart' width=400>
+  <img src="./public/workflow.png" alt='flowchart' width=800>
 </div> <br>
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
 ## Features
 * **Speech-Activated Image Capture:** Users can activate the app with a simple voice command to take a snapshot of the live camera feed.
 
-* **AI-Powered Image Description:** The app uses a pre-trained image description model to analyze the captured image and generate a natural language description of the scene.
+* **AI-Powered Image Description:** The app uses an AI agent to analyze the captured image and generate a description of the scene.
 
 * **Text-to-Speech Output:** The generated description is converted into speech, allowing users to hear the information audibly.
 
 ### Built With
+[![HTML][HTML]][HTML-url]
+[![CSS][CSS]][CSS-url]
+[![Javascript][Javascript]][Javascript-url]
+[![React][React]][React-url]
+[![Vite][Vite]][Vite-url]
 [![Python][Python]][Python-url]
-[![Numpy][Numpy]][Numpy-url]
-[![OpenCV][OpenCV]][OpenCV-url]
-[![Streamlit][Streamlit]][Streamlit-url]
-[![Pillow][Pillow]][Pillow-url]
 [![Google Gemini][Gemini]][Gemini-url]
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
 
 ## Getting Started
-To get a local copy of BlemishBot up and running locally follow these steps:  
+To get a local copy of Blind Spot up and running locally follow these steps:  
 
 ### Prerequisites
-1. Make sure you have Python installed and use Python3 version 3.11 
+1. Make sure you have Python installed and use Python3 version 3.12   
 **NOTE:** You can check if Python is installed and its version with 
     ```sh
     python -V | python --version
     ```
 2. Make sure you have Git installed  
-**NOTE:** You can check if Python is installed and its version with
+**NOTE:** You can check if Git is installed and its version with
     ```sh
     git -v | git --version
     ```
@@ -89,9 +88,13 @@ To get a local copy of BlemishBot up and running locally follow these steps:
     ```sh
     cd blind-spot
     ```
-4. Create a Python virtual environment in the cloned project directory:
+4. First, download the dependencies in package.json:
     ```sh
-    python3.11 -m venv .venv
+    npm install
+    ```
+4. Next, create a Python virtual environment in the cloned project directory:
+    ```sh
+    python3.12 -m venv .venv
     ```
 5. Activate the virtual environment (Windows OR Mac/Linux):
     1. Windows
@@ -102,26 +105,28 @@ To get a local copy of BlemishBot up and running locally follow these steps:
         ```sh
           source .venv/bin/activate
         ```
-6. Install dependencies:
+6. Install the python dependencies:
     ```sh
     pip install -r requirements.txt
     ```
 7. Set up a Gemini API key:
-    - Inside the ``.streamlit`` folder, create a ``secrets.toml`` file. Inside ``secrets.toml``, write:
+    - Inside the root directory, create a ``.env`` file. Inside the ``.env`` file, write:
         ```sh
-        [secrets]
-        GEMINI_API_KEY = "your-api-key"
+        GOOGLE_API_KEY = "your-api-key"
         ```
     - Replace ``your-api-key`` with your Gemini API key (keep the quotations).
 
 ### Usage
 1. Run the application:
     ```sh
-    streamlit run app.py
+    npm run dev
     ```
-2. Using the features:
-    - Lorem ipsum dolor sit amet
-    - Lorem ipsum dolor sit amet
+2. Voice Commands:
+    - "Describe the scene."
+    - "What's happening."
+    - "Guide me."
+    - "Show me my blind spot."
+    - "Jarvis, clip that."
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
@@ -143,7 +148,7 @@ We like open-source and want to develop practical applications for real-world pr
 - Suggestions
 - Maintenance
 - Documents
-- etc
+- etc.
 
 #### Heres how you can contribute:
 1. Fork the repository
@@ -180,21 +185,26 @@ SOFTWARE.
 
 
 
+[HTML]: https://img.shields.io/badge/HTML-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white
+[HTML-url]: https://html.spec.whatwg.org/multipage/
+
+[CSS]: https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=fff
+[CSS-url]: https://www.w3.org/Style/CSS/Overview.en.html
+
+[Javascript]: https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=000
+[Javascript-url]: https://262.ecma-international.org/14.0/
+
+[React]: https://img.shields.io/badge/React-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB
+[React-url]: https://react.dev/
+
+[Vite]: https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=fff
+[Vite-url]: https://vite.dev/
 
 [Python]: https://img.shields.io/badge/python-FFDE57?style=for-the-badge&logo=python&logoColor=4584B6
 [Python-url]: https://www.python.org/
 
-[Numpy]: https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white
-[Numpy-url]: https://numpy.org/
-
-[OpenCV]: https://img.shields.io/badge/opencv-000000?style=for-the-badge&logo=opencv&logoColor=00ff00
-[OpenCV-url]: https://opencv.org/
-
-[Streamlit]: https://img.shields.io/badge/streamlit-ffffff?style=for-the-badge&logo=streamlit&logoColor=ff0000
-[Streamlit-url]: https://streamlit.io/
-
-[Pillow]: https://img.shields.io/badge/pillow-000000?style=for-the-badge&logo=pillow
-[Pillow-url]: https://pillow.readthedocs.io/en/stable/
-
 [Gemini]: https://img.shields.io/badge/Google%20Gemini-886FBF?style=for-the-badge&logo=googlegemini&logoColor=fff
 [Gemini-url]: https://gemini.google.com/app
+
+[Flask]: https://img.shields.io/badge/Flask-000?style=for-the-badge&logo=flask&logoColor=fff
+[Flask-url]: https://flask.palletsprojects.com/en/stable/
