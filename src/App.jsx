@@ -7,10 +7,10 @@ function App() {
     <>
       <div className="wholePage">
         <div className="infoBar"> 
-          <img src="src/images/Logo.png" alt="Logo goes here" width= "50%" />
+          <img src="src/assets/Logo.png" alt="Logo goes here" width= "50%" />
         </div>
         <div className="mainBody">
-          <img src="src/images/describe.png" alt="Logo goes here" width = "50%" />
+          <img src="src/assets/describe.png" alt="Logo goes here" width = "50%" />
           <CameraFeed />
         </div>
       </div>
