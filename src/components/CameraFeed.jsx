@@ -81,14 +81,14 @@ export function CameraFeed() {
     
     // Try to use a more natural voice if available
     const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(voice => 
-      voice.lang === navigator.language && !voice.localService);
+    console.log("", voices);
+    const preferredVoice = voices.find(voice => voice.lang.includes('es-ES'));
     
     if (preferredVoice) {
       utterance.voice = preferredVoice;
     }
 
-    utterance.rate = 1.1; // Slightly faster than default
+    utterance.rate = 1.20; // Slightly faster than default
     utterance.pitch = 1;
     utterance.onend = () => setIsDescribing(false);
     utterance.onerror = (event) => {
