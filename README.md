@@ -56,6 +56,7 @@ The AI World Description App is designed to provide users with real-time descrip
 [![Vite][Vite]][Vite-url]
 [![Python][Python]][Python-url]
 [![Google Gemini][Gemini]][Gemini-url]
+[![Flask][Flask]][Flask-url]
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
@@ -119,6 +120,11 @@ To get a local copy of Blind Spot up and running locally follow these steps:
 ### Usage
 1. Run the application:
     ```sh
+    # activate backend server
+    python src/backend/server.py
+    ```
+    ```sh
+    # run application
     npm run dev
     ```
 2. Voice Commands:
@@ -126,7 +132,6 @@ To get a local copy of Blind Spot up and running locally follow these steps:
     - "What's happening."
     - "Guide me."
     - "Show me my blind spot."
-    - "Jarvis, clip that."
 
 <p align="right"><a href="#readme-top">Back to top</a></p>
 
