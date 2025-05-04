@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { voiceCommands } from "../utils/voiceCommands";
 import { ControlPanel } from "./ControlPanel";
 import { speakText } from "../utils/textToSpeech"; // Import the new utility function
-import startingImage from "../assets/startingImage.png"; 
 
 export function CameraFeed() {
   const videoRef = useRef(null);
@@ -12,6 +11,7 @@ export function CameraFeed() {
   const [cameraError, setCameraError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCameraAccess, setHasCameraAccess] = useState(false);
+  const [showStartingImage, setShowStartingImage] = useState(true);
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
@@ -147,26 +147,51 @@ export function CameraFeed() {
     }
   }, [isDescribing, takeSnapshot, hasCameraAccess]);
 
+
+  const describeStartingImage = useCallback(async () => {
+    try {
+      const response = await fetch("/startingImage.png");
+      const blob = await response.blob();
+
+      const formData = new FormData();
+      formData.append("image", blob, "startingImage.png");
+
+      const res = await fetch("http://localhost:5001/describe", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.description) {
+        setLastDescription(data.description);
+        speakText(data.description);
+      }
+    } catch (err) {
+      console.error("Failed to describe image:", err);
+      setLastDescription("Could not describe the example image.");
+    }
+  }, []);
+
   // Initialize camera and voice commands
   useEffect(() => {
-    startCamera();
-    
-    // Initialize voice commands
-    const cleanupVoice = voiceCommands({ describeScene });
-    
-    // Play welcome message only on first visit
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
     if (!hasVisitedBefore) {
-      // Use null callbacks to match the pattern in the working code
+      startCamera();
       speakText(
-        "Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started. Here's an example of what I can do:",
-        null, 
-        null
+        "Welcome to Blind-Spot. Say describe, describe the scene to start. Here's an example of what I can do.",
+        async () => {
+          await describeStartingImage();
+          startCamera(); 
+          setShowStartingImage(false);   
+        }
       );
-      
-
-      sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
+      sessionStorage.setItem("hasVisitedSceneDescriptor", "true"); 
+    } else {
+      startCamera();
+      setShowStartingImage(false);
     }
+    
+    const cleanupVoice = voiceCommands({ describeScene });
     
     // Cleanup function
     return () => {
@@ -192,31 +217,43 @@ export function CameraFeed() {
     <div className="camera-feed-container">
       {/* Camera feed with loading and error states */}
       <div className="video-container" aria-live="polite">
-        {isLoading && <div className="loading-indicator">Initializing camera...</div>}
-        {cameraError && (
-          <div className="error-message" role="alert">
-            <p>Camera error: {cameraError}</p>
-            <button 
-              onClick={startCamera} 
-              className="retry-button"
-              aria-label="Retry camera access"
-            >
-              Retry
-            </button>
-          </div>
+        {showStartingImage ? (
+          <img
+            src= "/startingImage.png"
+            alt="Example scene"
+            className="starting-image"
+            style={{ width: "100%", borderRadius: "12px" }}
+          />
+        ) : (
+          <>
+            {isLoading && <div className="loading-indicator">Initializing camera...</div>}
+            {cameraError && (
+              <div className="error-message" role="alert">
+                <p>Camera error: {cameraError}</p>
+                <button 
+                  onClick={startCamera} 
+                  className="retry-button"
+                  aria-label="Retry camera access"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            <video 
+              ref={videoRef} 
+              className="video-element"
+              width="100%" 
+              height="auto" 
+              autoPlay 
+              playsInline 
+              muted 
+              onLoadedMetadata={() => setIsLoading(false)}
+              aria-label="Live camera feed"
+            />
+          </>
         )}
-        <video 
-          ref={videoRef} 
-          className="video-element"
-          width="100%" 
-          height="auto" 
-          autoPlay 
-          playsInline 
-          muted 
-          onLoadedMetadata={() => setIsLoading(false)}
-          aria-label="Live camera feed"
-        />
       </div>
+
 
       {/* Description display with semantic markup */}
       {lastDescription && (
