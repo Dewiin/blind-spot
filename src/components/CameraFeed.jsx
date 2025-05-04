@@ -10,6 +10,7 @@ export function CameraFeed() {
   const [lastDescription, setLastDescription] = useState("");
   const [cameraError, setCameraError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasCameraAccess, setHasCameraAccess] = useState(false);
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
@@ -28,10 +29,12 @@ export function CameraFeed() {
         videoRef.current.srcObject = stream;
         streamRef.current = stream; // Store reference for cleanup
         setCameraError(null);
+        setHasCameraAccess(true); // Set camera access to true
       }
     } catch (error) {
       console.error("Error accessing the camera:", error);
       setCameraError(error.message || "Unable to access camera");
+      setHasCameraAccess(false); // Set camera access to false
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +73,11 @@ export function CameraFeed() {
 
   // Improved scene description with proper API error handling
   const describeScene = useCallback(async () => {
-    if (isDescribing) {
+    if (isDescribing || hasCameraAccess) {
+      if (hasCameraAccess) {
+        speakText("No camera access available. Please check camera permissions.", null, null);
+        setLastDescription("No camera access available. Please check camera permissions.");
+      }
       return;
     }
 
@@ -137,7 +144,7 @@ export function CameraFeed() {
       setLastDescription(`Error: ${errorMessage}`);
       setIsDescribing(false);
     }
-  }, [isDescribing, takeSnapshot]);
+  }, [isDescribing, takeSnapshot, hasCameraAccess]);
 
   // Initialize camera and voice commands
   useEffect(() => {
@@ -149,7 +156,12 @@ export function CameraFeed() {
     // Play welcome message only on first visit
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
     if (!hasVisitedBefore) {
-      speakText("Welcome to Blind-Spot, say describe, describe the scene, or tap the screent to get Started.");
+      // Use null callbacks to match the pattern in the working code
+      speakText(
+        "Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.",
+        null, 
+        null
+      );
       sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
     }
     
