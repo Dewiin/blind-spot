@@ -147,44 +147,6 @@ export function CameraFeed() {
     }
   }, [isDescribing, takeSnapshot, hasCameraAccess]);
 
-  async function sendImageToGemini(blob) {
-  const formData = new FormData();
-  formData.append('image', blob, 'startingImage.jpg');
-
-  const backendUrl = `http://localhost:5001/describe`; // or /gemini-describe
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-    const response = await fetch(backendUrl, {
-      method: 'POST',
-      body: formData,
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server error (${response.status}): ${errorText}`);
-    }
-
-    const data = await response.json();
-
-    if (data.description) {
-      setLastDescription(data.description);
-      speakText(data.description);
-    } else {
-      setLastDescription("No description returned.");
-    }
-  } catch (error) {
-    console.error("Gemini error:", error);
-    setLastDescription("Failed to describe image.");
-  }
-}
-
-
   // Initialize camera and voice commands
   useEffect(() => {
     startCamera();
