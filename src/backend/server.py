@@ -309,9 +309,13 @@ def create_app():
         })
     
     # API documentation
-    @app.route('/')
+    @app.route('/', methods=["GET"])
     def home():
         """API documentation endpoint."""
+
+        if request.accept_mimetypes.accept_html:
+            return render_template("index.html")
+        
         return jsonify({
             "api": "Blind-Spot API",
             "version": "1.0.0",
