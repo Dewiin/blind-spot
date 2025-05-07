@@ -13,7 +13,7 @@ services:
     runtime: static
     name: my-app-frontend
     buildCommand: npm install 
-    startCommand: npm run
+    startCommand: npm start
     staticPublishPath: ./build
     routes:
       - type: rewrite
