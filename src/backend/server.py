@@ -309,25 +309,26 @@ def create_app():
         })
     
     # API documentation
-    @app.route('/', methods=["GET"])
+    @app.route("/", methods=["GET"])
     def home():
-        """API documentation endpoint."""
-
+        # If the client accepts HTML, serve the upload form
         if request.accept_mimetypes.accept_html:
             return render_template("index.html")
         
+        # Otherwise, serve API spec JSON
         return jsonify({
             "api": "Blind-Spot API",
             "version": "1.0.0",
             "description": "API for describing images for visually impaired users",
             "endpoints": {
-                "health": "GET /health - Check API health",
-                "single_image": "POST /describe - Process a single image",
-                "multiple_images": "POST /describe_sequence - Process multiple images in sequence",
-                "clear_history": "POST /clear_history - Clear the description history"
+                "health": "GET /health",
+                "single_image": "POST /describe",
+                "multiple_images": "POST /describe_sequence",
+                "clear_history": "POST /clear_history"
             },
             "documentation": "https://github.com/your-repo/blind-spot/docs"
-        })
+    })
+
     
     @app.route('/favicon.ico')
     def favicon():
