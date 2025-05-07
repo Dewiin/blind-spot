@@ -51,7 +51,7 @@ class Config:
     # Security Settings
     SECRET_KEY = os.getenv("SECRET_KEY", str(uuid.uuid4()))
     API_KEY = os.getenv("API_KEY")
-    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "https://blind-spot.app").split(",")
     
     # Google API Settings
     GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
