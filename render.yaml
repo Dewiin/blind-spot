@@ -1,7 +1,7 @@
 services:
   - type: web
+    runtime: python
     name: my-app-backend
-    env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python src/backend/server.py
     envVars:
@@ -13,7 +13,6 @@ services:
     runtime: static
     name: my-app-frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
     routes:
       - type: rewrite
         source: /*
