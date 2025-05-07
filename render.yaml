@@ -12,7 +12,8 @@ services:
   - type: web
     runtime: static
     name: my-app-frontend
-    buildCommand: npm install && npm run build
+    buildCommand: npm install 
+    startCommand: npm run
     routes:
       - type: rewrite
         source: /*
