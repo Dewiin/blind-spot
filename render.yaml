@@ -10,7 +10,8 @@ services:
     domains:
       - api.blind-spot.app
 
-  - type: static
+  - type: web
+    runtime: static
     name: my-app-frontend
     buildCommand: npm install && npm run build
     publishDir: dist
