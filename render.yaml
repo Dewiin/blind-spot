@@ -7,8 +7,7 @@ services:
     envVars:
       - key: PORT
         value: 5173
-    domains:
-      - api.blind-spot.app
+    
 
   - type: web
     runtime: static
@@ -19,5 +18,4 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    domains:
-      - blind-spot.app
+    
