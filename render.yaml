@@ -14,6 +14,7 @@ services:
     name: my-app-frontend
     buildCommand: npm install 
     startCommand: npm run
+    staticPublishPath: ./build
     routes:
       - type: rewrite
         source: /*
