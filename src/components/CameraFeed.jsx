@@ -102,7 +102,7 @@ export function CameraFeed() {
       
       // Use AbortController for request timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 10s timeout
       
       const response = await fetch(backendUrl, {
         method: 'POST',
