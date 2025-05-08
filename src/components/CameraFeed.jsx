@@ -98,7 +98,7 @@ export function CameraFeed() {
       const formData = new FormData();
       formData.append('image', blob, 'snapshot.jpg');
 
-      const backendUrl = `http://api.blind-spot.app/describe`;
+      const backendUrl = `https://api.blind-spot.app/describe`;
       
       // Use AbortController for request timeout
       const controller = new AbortController();
