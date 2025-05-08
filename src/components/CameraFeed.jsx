@@ -11,6 +11,7 @@ export function CameraFeed() {
   const [cameraError, setCameraError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCameraAccess, setHasCameraAccess] = useState(false);
+ 
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
@@ -74,7 +75,7 @@ export function CameraFeed() {
   // Improved scene description with proper API error handling
   const describeScene = useCallback(async () => {
     if (isDescribing || hasCameraAccess) {
-      if (hasCameraAccess) {
+      if(!hasCameraAccess) {
         speakText("No camera access available. Please check camera permissions.", null, null);
         setLastDescription("No camera access available. Please check camera permissions.");
       }
@@ -146,6 +147,7 @@ export function CameraFeed() {
     }
   }, [isDescribing, takeSnapshot, hasCameraAccess]);
 
+
   // Initialize camera and voice commands
   useEffect(() => {
     startCamera();
@@ -189,31 +191,43 @@ export function CameraFeed() {
     <div className="camera-feed-container">
       {/* Camera feed with loading and error states */}
       <div className="video-container" aria-live="polite">
-        {isLoading && <div className="loading-indicator">Initializing camera...</div>}
-        {cameraError && (
-          <div className="error-message" role="alert">
-            <p>Camera error: {cameraError}</p>
-            <button 
-              onClick={startCamera} 
-              className="retry-button"
-              aria-label="Retry camera access"
-            >
-              Retry
-            </button>
-          </div>
+        {showStartingImage ? (
+          <img
+            src= "/startingImage.png"
+            alt="Example scene"
+            className="starting-image"
+            style={{ width: "100%", borderRadius: "12px" }}
+          />
+        ) : (
+          <>
+            {isLoading && <div className="loading-indicator">Initializing camera...</div>}
+            {cameraError && (
+              <div className="error-message" role="alert">
+                <p>Camera error: {cameraError}</p>
+                <button 
+                  onClick={startCamera} 
+                  className="retry-button"
+                  aria-label="Retry camera access"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            <video 
+              ref={videoRef} 
+              className="video-element"
+              width="100%" 
+              height="auto" 
+              autoPlay 
+              playsInline 
+              muted 
+              onLoadedMetadata={() => setIsLoading(false)}
+              aria-label="Live camera feed"
+            />
+          </>
         )}
-        <video 
-          ref={videoRef} 
-          className="video-element"
-          width="100%" 
-          height="auto" 
-          autoPlay 
-          playsInline 
-          muted 
-          onLoadedMetadata={() => setIsLoading(false)}
-          aria-label="Live camera feed"
-        />
       </div>
+
 
       {/* Description display with semantic markup */}
       {lastDescription && (
