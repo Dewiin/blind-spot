@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { voiceCommands } from "../utils/voiceCommands";
 import { ControlPanel } from "./ControlPanel";
-import { speakText } from "../utils/textToSpeech"; // Import the new utility function
+import { useSpeech } from "../utils/useSpeech";
 
 export function CameraFeed() {
   const videoRef = useRef(null);
@@ -11,7 +11,22 @@ export function CameraFeed() {
   const [cameraError, setCameraError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCameraAccess, setHasCameraAccess] = useState(false);
- 
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+  
+  // Initialize speech synthesis
+  const { speak, isSafari } = useSpeech();
+
+  // Handle user interaction
+  const handleUserInteraction = useCallback(() => {
+    if (!hasUserInteracted) {
+      setHasUserInteracted(true);
+      // Play a silent sound to enable audio on Safari mobile
+      if (isSafari) {
+        const audio = new Audio();
+        audio.play().catch(() => {});
+      }
+    }
+  }, [hasUserInteracted, isSafari]);
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
@@ -74,9 +89,13 @@ export function CameraFeed() {
 
   // Improved scene description with proper API error handling
   const describeScene = useCallback(async () => {
-    if (isDescribing || hasCameraAccess) {
+    if (!hasUserInteracted) {
+      handleUserInteraction();
+    }
+
+    if (isDescribing || !hasCameraAccess) {
       if(!hasCameraAccess) {
-        speakText("No camera access available. Please check camera permissions.", null, null);
+        speak("No camera access available. Please check camera permissions.");
         setLastDescription("No camera access available. Please check camera permissions.");
       }
       return;
@@ -102,7 +121,7 @@ export function CameraFeed() {
       
       // Use AbortController for request timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 10s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
       
       const response = await fetch(backendUrl, {
         method: 'POST',
@@ -121,15 +140,10 @@ export function CameraFeed() {
       
       if (data.description) {
         setLastDescription(data.description);
-        
-        // Use the extracted speech function and handle completion
-        speakText(data.description, () => setIsDescribing(false), (error) => {
-          console.error("Speech error:", error);
-          setIsDescribing(false);
-        });
+        speak(data.description);
       } else {
         setLastDescription("No description available for this scene.");
-        setIsDescribing(false);
+        speak("No description available for this scene.");
       }
     } catch (error) {
       console.error("Scene description error:", error);
@@ -143,10 +157,11 @@ export function CameraFeed() {
       }
       
       setLastDescription(`Error: ${errorMessage}`);
+      speak(errorMessage);
+    } finally {
       setIsDescribing(false);
     }
-  }, [isDescribing, takeSnapshot, hasCameraAccess]);
-
+  }, [isDescribing, takeSnapshot, hasCameraAccess, speak, hasUserInteracted, handleUserInteraction]);
 
   // Initialize camera and voice commands
   useEffect(() => {
@@ -158,12 +173,10 @@ export function CameraFeed() {
     // Play welcome message only on first visit
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
     if (!hasVisitedBefore) {
-      // Use null callbacks to match the pattern in the working code
-      speakText(
-        "Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.",
-        null, 
-        null
-      );
+      // Don't play welcome message on Safari mobile until user interaction
+      if (!isSafari) {
+        speak("Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.");
+      }
       sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
     }
     
@@ -174,21 +187,20 @@ export function CameraFeed() {
         cleanupVoice();
       }
       
-      // Stop speech synthesis
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-      
       // Stop camera stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
       }
     };
-  }, [startCamera, describeScene]);
+  }, [startCamera, describeScene, speak, isSafari]);
 
   return (
-    <div className="camera-feed-container">
+    <div 
+      className="camera-feed-container"
+      onClick={handleUserInteraction}
+      onTouchStart={handleUserInteraction}
+    >
       {/* Camera feed with loading and error states */}
       <div className="video-container" aria-live="polite">
         <>
@@ -218,7 +230,6 @@ export function CameraFeed() {
           />
         </>
       </div>
-
 
       {/* Description display with semantic markup */}
       {lastDescription && (
