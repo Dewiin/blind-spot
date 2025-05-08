@@ -185,8 +185,19 @@ export function CameraFeed() {
     // Play welcome message only on first visit
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
     if (!hasVisitedBefore) {
-      // Don't play welcome message on Safari mobile until user interaction
-      if (!isSafari) {
+      // For Safari, we'll wait for user interaction before playing the welcome message
+      if (isSafari) {
+        const playWelcomeMessage = () => {
+          speak("Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.");
+          // Remove the event listener after playing the message
+          document.removeEventListener('click', playWelcomeMessage);
+          document.removeEventListener('touchstart', playWelcomeMessage);
+        };
+        
+        // Add event listeners for user interaction
+        document.addEventListener('click', playWelcomeMessage);
+        document.addEventListener('touchstart', playWelcomeMessage);
+      } else {
         speak("Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.");
       }
       sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');

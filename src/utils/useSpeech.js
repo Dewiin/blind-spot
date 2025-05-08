@@ -1,11 +1,12 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export const useSpeech = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSafari, setIsSafari] = useState(false);
-  const [audioContext, setAudioContext] = useState(null);
+  const audioContextRef = useRef(null);
+  const voicesLoadedRef = useRef(false);
 
   // Detect Safari
   useEffect(() => {
@@ -15,31 +16,39 @@ export const useSpeech = () => {
 
   // Initialize audio context for Safari
   useEffect(() => {
-    if (isSafari && !audioContext) {
+    if (isSafari && !audioContextRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
-      const context = new AudioContext();
-      setAudioContext(context);
+      audioContextRef.current = new AudioContext();
     }
-  }, [isSafari, audioContext]);
+  }, [isSafari]);
 
   // Load available voices
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
-      setVoices(availableVoices);
-      
-      // Try to find a female English voice by default
-      const preferredVoice = availableVoices.find(
-        voice => voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female')
-      ) || availableVoices[0];
-      
-      setSelectedVoice(preferredVoice);
+      if (availableVoices.length > 0) {
+        setVoices(availableVoices);
+        voicesLoadedRef.current = true;
+        
+        // Try to find a female English voice by default
+        const preferredVoice = availableVoices.find(
+          voice => voice.lang.startsWith('en') && voice.name.toLowerCase().includes('female')
+        ) || availableVoices[0];
+        
+        setSelectedVoice(preferredVoice);
+      }
     };
 
     // Handle voice loading differently for Safari
     if (isSafari) {
-      // Safari needs a small delay to load voices
-      setTimeout(loadVoices, 100);
+      // Safari needs multiple attempts to load voices
+      const attemptLoadVoices = () => {
+        loadVoices();
+        if (!voicesLoadedRef.current) {
+          setTimeout(attemptLoadVoices, 100);
+        }
+      };
+      attemptLoadVoices();
     } else {
       // Other browsers can use the event
       if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -55,7 +64,7 @@ export const useSpeech = () => {
     return text.match(/[^.!?]+[.!?]+/g) || [text];
   };
 
-  const speak = useCallback((text, options = {}) => {
+  const speak = useCallback(async (text, options = {}) => {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported');
       return;
@@ -63,6 +72,13 @@ export const useSpeech = () => {
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
+
+    // For Safari, ensure audio context is running
+    if (isSafari && audioContextRef.current) {
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+    }
 
     // Split text into chunks for better handling
     const chunks = splitTextIntoChunks(text);
@@ -95,24 +111,23 @@ export const useSpeech = () => {
         setIsSpeaking(false);
       };
 
-      // Safari mobile needs special handling
+      // Safari needs special handling
       if (isSafari) {
-        // Resume audio context if it's suspended
-        if (audioContext && audioContext.state === 'suspended') {
-          audioContext.resume();
-        }
-        
-        // Add a small delay for Safari
-        setTimeout(() => {
+        // Ensure we have voices loaded
+        if (!voicesLoadedRef.current) {
+          setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+          }, 100);
+        } else {
           window.speechSynthesis.speak(utterance);
-        }, 100);
+        }
       } else {
         window.speechSynthesis.speak(utterance);
       }
     };
 
     speakNextChunk();
-  }, [selectedVoice, isSafari, audioContext]);
+  }, [selectedVoice, isSafari]);
 
   const stop = useCallback(() => {
     if (window.speechSynthesis) {
