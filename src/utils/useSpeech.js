@@ -96,7 +96,7 @@ export const useSpeech = () => {
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
-      utterance.rate = options.rate || 1.0;
+      utterance.rate = options.rate || 1.175;
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
 
@@ -113,13 +113,16 @@ export const useSpeech = () => {
 
       // Safari needs special handling
       if (isSafari) {
-        // Ensure we have voices loaded
+        // Ensure we have voices loaded and audio context is running
         if (!voicesLoadedRef.current) {
           setTimeout(() => {
             window.speechSynthesis.speak(utterance);
           }, 100);
         } else {
-          window.speechSynthesis.speak(utterance);
+          // Add a small delay for Safari to ensure audio context is ready
+          setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+          }, 50);
         }
       } else {
         window.speechSynthesis.speak(utterance);
