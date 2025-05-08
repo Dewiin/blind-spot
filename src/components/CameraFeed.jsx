@@ -20,10 +20,22 @@ export function CameraFeed() {
   const handleUserInteraction = useCallback(() => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
-      // Play a silent sound to enable audio on Safari mobile
+      // Initialize audio context for iOS Safari
       if (isSafari) {
-        const audio = new Audio();
-        audio.play().catch(() => {});
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Set gain to 0 to make it silent
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Start and immediately stop to initialize audio context
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.001);
       }
     }
   }, [hasUserInteracted, isSafari]);
