@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
 
 <div align="center">
-  <img src="./src/Logo.png" alt='logo' width=300>
+  <img src="./public/Logo.png" alt='logo' width=300>
   <h1>AI-Powered World Description App</h1>
 </div> <br>
 
