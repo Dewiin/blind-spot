@@ -311,11 +311,6 @@ def create_app():
     # API documentation
     @app.route("/", methods=["GET"])
     def home():
-        # If the client accepts HTML, serve the upload form
-        if request.accept_mimetypes.accept_html:
-            return render_template("index.html")
-        
-        # Otherwise, serve API spec JSON
         return jsonify({
             "api": "Blind-Spot API",
             "version": "1.0.0",
