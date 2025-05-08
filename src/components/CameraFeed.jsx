@@ -14,31 +14,18 @@ export function CameraFeed() {
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   
   // Initialize speech synthesis
-  const { speak, isSafari } = useSpeech();
+  const { speak, isSafari, initializeAudioContext } = useSpeech();
 
   // Handle user interaction
-  const handleUserInteraction = useCallback(() => {
+  const handleUserInteraction = useCallback(async () => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
       // Initialize audio context for iOS Safari
       if (isSafari) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const audioContext = new AudioContext();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        
-        // Set gain to 0 to make it silent
-        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        
-        // Start and immediately stop to initialize audio context
-        oscillator.start();
-        oscillator.stop(audioContext.currentTime + 0.001);
+        await initializeAudioContext();
       }
     }
-  }, [hasUserInteracted, isSafari]);
+  }, [hasUserInteracted, isSafari, initializeAudioContext]);
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {

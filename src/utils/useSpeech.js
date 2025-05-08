@@ -7,6 +7,7 @@ export const useSpeech = () => {
   const [isSafari, setIsSafari] = useState(false);
   const audioContextRef = useRef(null);
   const voicesLoadedRef = useRef(false);
+  const hasUserInteractedRef = useRef(false);
 
   // Detect Safari
   useEffect(() => {
@@ -58,6 +59,18 @@ export const useSpeech = () => {
     }
   }, [isSafari]);
 
+  // Initialize audio context on user interaction
+  const initializeAudioContext = useCallback(async () => {
+    if (isSafari && audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      try {
+        await audioContextRef.current.resume();
+        hasUserInteractedRef.current = true;
+      } catch (e) {
+        console.error('Failed to resume audio context:', e);
+      }
+    }
+  }, [isSafari]);
+
   // Split text into manageable chunks
   const splitTextIntoChunks = (text) => {
     // Split by sentences, keeping the punctuation
@@ -74,10 +87,8 @@ export const useSpeech = () => {
     window.speechSynthesis.cancel();
 
     // For Safari, ensure audio context is running
-    if (isSafari && audioContextRef.current) {
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
-      }
+    if (isSafari) {
+      await initializeAudioContext();
     }
 
     // Split text into chunks for better handling
@@ -96,7 +107,7 @@ export const useSpeech = () => {
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
-      utterance.rate = options.rate || 1.175;
+      utterance.rate = options.rate || 1.15;
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
 
@@ -130,7 +141,7 @@ export const useSpeech = () => {
     };
 
     speakNextChunk();
-  }, [selectedVoice, isSafari]);
+  }, [selectedVoice, isSafari, initializeAudioContext]);
 
   const stop = useCallback(() => {
     if (window.speechSynthesis) {
@@ -162,6 +173,7 @@ export const useSpeech = () => {
     voices,
     selectedVoice,
     setSelectedVoice,
-    isSafari
+    isSafari,
+    initializeAudioContext
   };
 }; 
