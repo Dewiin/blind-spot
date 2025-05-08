@@ -8,6 +8,8 @@ export const useSpeech = () => {
   const audioContextRef = useRef(null);
   const voicesLoadedRef = useRef(false);
   const hasUserInteractedRef = useRef(false);
+  const utteranceQueueRef = useRef([]);
+  const isProcessingQueueRef = useRef(false);
 
   // Detect Safari
   useEffect(() => {
@@ -23,7 +25,7 @@ export const useSpeech = () => {
     }
   }, [isSafari]);
 
-  // Load available voices
+  // Load available voices with improved Safari handling
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
@@ -43,21 +45,62 @@ export const useSpeech = () => {
     // Handle voice loading differently for Safari
     if (isSafari) {
       // Safari needs multiple attempts to load voices
+      let attempts = 0;
+      const maxAttempts = 10;
+      
       const attemptLoadVoices = () => {
         loadVoices();
-        if (!voicesLoadedRef.current) {
-          setTimeout(attemptLoadVoices, 100);
+        if (!voicesLoadedRef.current && attempts < maxAttempts) {
+          attempts++;
+          setTimeout(attemptLoadVoices, 200);
         }
       };
+      
+      // Initial attempt
       attemptLoadVoices();
+      
+      // Also listen for voiceschanged event
+      window.speechSynthesis.onvoiceschanged = loadVoices;
     } else {
-      // Other browsers can use the event
       if (window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = loadVoices;
       }
       loadVoices();
     }
   }, [isSafari]);
+
+  // Process utterance queue
+  const processQueue = useCallback(() => {
+    if (isProcessingQueueRef.current || utteranceQueueRef.current.length === 0) {
+      return;
+    }
+
+    isProcessingQueueRef.current = true;
+    const utterance = utteranceQueueRef.current[0];
+
+    utterance.onend = () => {
+      utteranceQueueRef.current.shift();
+      isProcessingQueueRef.current = false;
+      if (utteranceQueueRef.current.length > 0) {
+        processQueue();
+      } else {
+        setIsSpeaking(false);
+      }
+    };
+
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      utteranceQueueRef.current.shift();
+      isProcessingQueueRef.current = false;
+      if (utteranceQueueRef.current.length > 0) {
+        processQueue();
+      } else {
+        setIsSpeaking(false);
+      }
+    };
+
+    window.speechSynthesis.speak(utterance);
+  }, []);
 
   // Initialize audio context on user interaction
   const initializeAudioContext = useCallback(async () => {
@@ -71,12 +114,6 @@ export const useSpeech = () => {
     }
   }, [isSafari]);
 
-  // Split text into manageable chunks
-  const splitTextIntoChunks = (text) => {
-    // Split by sentences, keeping the punctuation
-    return text.match(/[^.!?]+[.!?]+/g) || [text];
-  };
-
   const speak = useCallback(async (text, options = {}) => {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported');
@@ -85,6 +122,8 @@ export const useSpeech = () => {
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
+    utteranceQueueRef.current = [];
+    isProcessingQueueRef.current = false;
 
     // For Safari, ensure audio context is running
     if (isSafari) {
@@ -92,16 +131,11 @@ export const useSpeech = () => {
     }
 
     // Split text into chunks for better handling
-    const chunks = splitTextIntoChunks(text);
-    let currentChunkIndex = 0;
+    const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
 
-    const speakNextChunk = () => {
-      if (currentChunkIndex >= chunks.length) {
-        setIsSpeaking(false);
-        return;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(chunks[currentChunkIndex]);
+    // Create utterances for each chunk
+    chunks.forEach(chunk => {
+      const utterance = new SpeechSynthesisUtterance(chunk);
       
       // Apply voice settings
       if (selectedVoice) {
@@ -111,41 +145,27 @@ export const useSpeech = () => {
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
 
-      // Handle speech events
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => {
-        currentChunkIndex++;
-        speakNextChunk();
-      };
-      utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
-        setIsSpeaking(false);
-      };
+      utteranceQueueRef.current.push(utterance);
+    });
 
-      // Safari needs special handling
-      if (isSafari) {
-        // Ensure we have voices loaded and audio context is running
-        if (!voicesLoadedRef.current) {
-          setTimeout(() => {
-            window.speechSynthesis.speak(utterance);
-          }, 100);
-        } else {
-          // Add a small delay for Safari to ensure audio context is ready
-          setTimeout(() => {
-            window.speechSynthesis.speak(utterance);
-          }, 50);
-        }
-      } else {
-        window.speechSynthesis.speak(utterance);
-      }
-    };
+    setIsSpeaking(true);
 
-    speakNextChunk();
-  }, [selectedVoice, isSafari, initializeAudioContext]);
+    // Start processing the queue
+    if (isSafari) {
+      // Add a small delay for Safari
+      setTimeout(() => {
+        processQueue();
+      }, 100);
+    } else {
+      processQueue();
+    }
+  }, [selectedVoice, isSafari, initializeAudioContext, processQueue]);
 
   const stop = useCallback(() => {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
+      utteranceQueueRef.current = [];
+      isProcessingQueueRef.current = false;
       setIsSpeaking(false);
     }
   }, []);
