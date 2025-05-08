@@ -7,8 +7,6 @@ export const useSpeech = () => {
   const [isSafari, setIsSafari] = useState(false);
   const audioContextRef = useRef(null);
   const voicesLoadedRef = useRef(false);
-  const utteranceQueueRef = useRef([]);
-  const isProcessingQueueRef = useRef(false);
 
   // Detect Safari
   useEffect(() => {
@@ -60,39 +58,6 @@ export const useSpeech = () => {
     }
   }, [isSafari]);
 
-  // Process utterance queue
-  const processQueue = useCallback(() => {
-    if (isProcessingQueueRef.current || utteranceQueueRef.current.length === 0) {
-      return;
-    }
-
-    isProcessingQueueRef.current = true;
-    const utterance = utteranceQueueRef.current[0];
-
-    utterance.onend = () => {
-      utteranceQueueRef.current.shift();
-      isProcessingQueueRef.current = false;
-      if (utteranceQueueRef.current.length > 0) {
-        processQueue();
-      } else {
-        setIsSpeaking(false);
-      }
-    };
-
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
-      utteranceQueueRef.current.shift();
-      isProcessingQueueRef.current = false;
-      if (utteranceQueueRef.current.length > 0) {
-        processQueue();
-      } else {
-        setIsSpeaking(false);
-      }
-    };
-
-    window.speechSynthesis.speak(utterance);
-  }, []);
-
   // Split text into manageable chunks
   const splitTextIntoChunks = (text) => {
     // Split by sentences, keeping the punctuation
@@ -107,8 +72,6 @@ export const useSpeech = () => {
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
-    utteranceQueueRef.current = [];
-    isProcessingQueueRef.current = false;
 
     // For Safari, ensure audio context is running
     if (isSafari && audioContextRef.current) {
@@ -119,31 +82,56 @@ export const useSpeech = () => {
 
     // Split text into chunks for better handling
     const chunks = splitTextIntoChunks(text);
-    
-    // Create utterances for each chunk
-    chunks.forEach(chunk => {
-      const utterance = new SpeechSynthesisUtterance(chunk);
+    let currentChunkIndex = 0;
+
+    const speakNextChunk = () => {
+      if (currentChunkIndex >= chunks.length) {
+        setIsSpeaking(false);
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(chunks[currentChunkIndex]);
       
       // Apply voice settings
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
-      utterance.rate = options.rate || 1.175;
+      utterance.rate = options.rate || 1.0;
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
 
-      utteranceQueueRef.current.push(utterance);
-    });
+      // Handle speech events
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => {
+        currentChunkIndex++;
+        speakNextChunk();
+      };
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setIsSpeaking(false);
+      };
 
-    setIsSpeaking(true);
-    processQueue();
-  }, [selectedVoice, isSafari, processQueue]);
+      // Safari needs special handling
+      if (isSafari) {
+        // Ensure we have voices loaded
+        if (!voicesLoadedRef.current) {
+          setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+          }, 100);
+        } else {
+          window.speechSynthesis.speak(utterance);
+        }
+      } else {
+        window.speechSynthesis.speak(utterance);
+      }
+    };
+
+    speakNextChunk();
+  }, [selectedVoice, isSafari]);
 
   const stop = useCallback(() => {
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
-      utteranceQueueRef.current = [];
-      isProcessingQueueRef.current = false;
       setIsSpeaking(false);
     }
   }, []);

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { voiceCommands } from "../utils/voiceCommands";
 import { ControlPanel } from "./ControlPanel";
 import { useSpeech } from "../utils/useSpeech";
-import { useVoiceCommands } from '../utils/voiceCommands';
 
 export function CameraFeed() {
   const videoRef = useRef(null);
@@ -16,17 +15,6 @@ export function CameraFeed() {
   
   // Initialize speech synthesis
   const { speak, isSafari } = useSpeech();
-
-  const { startListening, stopListening, isListening, isMicrophoneAvailable, error: voiceError } = useVoiceCommands([
-    {
-      command: ['describe the scene', 'describe', 'what\'s happening', 'show me my blind spot', 'guide me', 'jarvis clip that'],
-      callback: () => {
-        if (!isDescribing) {
-          describeScene();
-        }
-      }
-    }
-  ]);
 
   // Handle user interaction
   const handleUserInteraction = useCallback(() => {
@@ -192,7 +180,7 @@ export function CameraFeed() {
     startCamera();
     
     // Initialize voice commands
-    startListening();
+    const cleanupVoice = voiceCommands({ describeScene });
     
     // Play welcome message only on first visit
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
@@ -218,7 +206,9 @@ export function CameraFeed() {
     // Cleanup function
     return () => {
       // Clean up voice commands
-      stopListening();
+      if (cleanupVoice && typeof cleanupVoice === 'function') {
+        cleanupVoice();
+      }
       
       // Stop camera stream
       if (streamRef.current) {
@@ -226,7 +216,7 @@ export function CameraFeed() {
         streamRef.current = null;
       }
     };
-  }, [startCamera, describeScene, speak, isSafari, startListening, stopListening]);
+  }, [startCamera, describeScene, speak, isSafari]);
 
   return (
     <div 
@@ -287,16 +277,6 @@ export function CameraFeed() {
         describeScene={describeScene} 
         isDisabled={isDescribing || isLoading || !!cameraError}
       />
-
-      {voiceError && (
-        <div className="error-message">
-          {voiceError === 'not-allowed' ? (
-            'Microphone access is required for voice commands'
-          ) : (
-            'Voice commands are not supported in this browser'
-          )}
-        </div>
-      )}
     </div>
   );
 }

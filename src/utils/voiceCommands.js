@@ -1,122 +1,70 @@
-import { useEffect, useRef, useState } from 'react';
+export function voiceCommands({ describeScene }) {
+  const isSpeechRecognitionSupported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
 
-export const useVoiceCommands = (commands = []) => {
-  const [isListening, setIsListening] = useState(false);
-  const [isMicrophoneAvailable, setIsMicrophoneAvailable] = useState(true);
-  const recognitionRef = useRef(null);
-  const [error, setError] = useState(null);
+  if (isSpeechRecognitionSupported) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
 
-  useEffect(() => {
-    // Initialize speech recognition
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      setError('Speech recognition is not supported in this browser');
-      return;
-    }
+      // Define command patterns
+      const commandPatterns = [
+          'describe the scene',
+          'describe',
+          'what\'s happening',
+          'show me my blind spot',
+          'guide me',
+          'jarvis clip that'
+      ];
 
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-
-    // Configure recognition
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    // Handle results
-    recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join('')
-        .toLowerCase();
-
-      // Check for commands
-      commands.forEach(({ command, callback }) => {
-        if (typeof command === 'string') {
-          if (transcript.includes(command.toLowerCase())) {
-            callback(transcript);
+      recognition.onresult = (event) => {
+          const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+          
+          // Check if the transcript matches any of our command patterns
+          if (commandPatterns.some(pattern => transcript.includes(pattern))) {
+              describeScene();
           }
-        } else if (command instanceof RegExp) {
-          const match = transcript.match(command);
-          if (match) {
-            callback(...match.slice(1));
+      };
+
+      recognition.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'not-allowed') {
+              console.warn('Microphone access denied');
           }
-        } else if (Array.isArray(command)) {
-          command.forEach(cmd => {
-            if (transcript.includes(cmd.toLowerCase())) {
-              callback(cmd);
-            }
-          });
-        }
-      });
-    };
+      };
 
-    // Handle errors
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      setError(event.error);
-      
-      if (event.error === 'not-allowed') {
-        setIsMicrophoneAvailable(false);
-      }
-      
-      // Restart recognition if it was interrupted
-      if (isListening && event.error !== 'not-allowed') {
-        try {
+      recognition.onend = () => {
+          // Restart recognition if it ends unexpectedly
+          if (recognition) {
+              try {
+                  recognition.start();
+              } catch (e) {
+                  console.warn('Failed to restart speech recognition:', e);
+              }
+          }
+      };
+
+      // Start recognition
+      try {
           recognition.start();
-        } catch (e) {
-          console.error('Failed to restart recognition:', e);
-        }
+      } catch (e) {
+          console.warn('Failed to start speech recognition:', e);
       }
-    };
+  } else {
+      console.warn('Speech recognition not supported in this browser');
+  }
 
-    // Handle end of recognition
-    recognition.onend = () => {
-      if (isListening) {
-        try {
-          recognition.start();
-        } catch (e) {
-          console.error('Failed to restart recognition:', e);
-        }
+  // Return cleanup function
+  return () => {
+      if (recognition) {
+          try {
+              recognition.stop();
+          } catch (e) {
+              console.warn('Error stopping speech recognition:', e);
+          }
+          recognition = null;
       }
-    };
-
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [commands, isListening]);
-
-  const startListening = async () => {
-    if (!recognitionRef.current) return;
-
-    try {
-      await recognitionRef.current.start();
-      setIsListening(true);
-      setError(null);
-    } catch (e) {
-      console.error('Failed to start recognition:', e);
-      setError(e.message);
-    }
   };
-
-  const stopListening = () => {
-    if (!recognitionRef.current) return;
-
-    try {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } catch (e) {
-      console.error('Failed to stop recognition:', e);
-    }
-  };
-
-  return {
-    startListening,
-    stopListening,
-    isListening,
-    isMicrophoneAvailable,
-    error
-  };
-};
+}
