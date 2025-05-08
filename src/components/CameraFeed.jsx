@@ -191,41 +191,32 @@ export function CameraFeed() {
     <div className="camera-feed-container">
       {/* Camera feed with loading and error states */}
       <div className="video-container" aria-live="polite">
-        {showStartingImage ? (
-          <img
-            src= "/startingImage.png"
-            alt="Example scene"
-            className="starting-image"
-            style={{ width: "100%", borderRadius: "12px" }}
+        <>
+          {isLoading && <div className="loading-indicator">Initializing camera...</div>}
+          {cameraError && (
+            <div className="error-message" role="alert">
+              <p>Camera error: {cameraError}</p>
+              <button 
+                onClick={startCamera} 
+                className="retry-button"
+                aria-label="Retry camera access"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          <video 
+            ref={videoRef} 
+            className="video-element"
+            width="100%" 
+            height="auto" 
+            autoPlay 
+            playsInline 
+            muted 
+            onLoadedMetadata={() => setIsLoading(false)}
+            aria-label="Live camera feed"
           />
-        ) : (
-          <>
-            {isLoading && <div className="loading-indicator">Initializing camera...</div>}
-            {cameraError && (
-              <div className="error-message" role="alert">
-                <p>Camera error: {cameraError}</p>
-                <button 
-                  onClick={startCamera} 
-                  className="retry-button"
-                  aria-label="Retry camera access"
-                >
-                  Retry
-                </button>
-              </div>
-            )}
-            <video 
-              ref={videoRef} 
-              className="video-element"
-              width="100%" 
-              height="auto" 
-              autoPlay 
-              playsInline 
-              muted 
-              onLoadedMetadata={() => setIsLoading(false)}
-              aria-label="Live camera feed"
-            />
-          </>
-        )}
+        </>
       </div>
 
 
