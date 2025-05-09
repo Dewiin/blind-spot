@@ -13,19 +13,19 @@ export function CameraFeed() {
   const [hasCameraAccess, setHasCameraAccess] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   
-  // Initialize speech synthesis
-  const { speak, isSafari, initializeAudioContext } = useSpeech();
+  // Initialize speech synthesis with new iOS flag
+  const { speak, isSafari, isIOS, initializeAudioContext } = useSpeech();
 
   // Handle user interaction
   const handleUserInteraction = useCallback(async () => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
       // Initialize audio context for iOS Safari
-      if (isSafari) {
+      if (isSafari || isIOS) {
         await initializeAudioContext();
       }
     }
-  }, [hasUserInteracted, isSafari, initializeAudioContext]);
+  }, [hasUserInteracted, isSafari, isIOS, initializeAudioContext]);
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
@@ -89,7 +89,11 @@ export function CameraFeed() {
   // Improved scene description with proper API error handling
   const describeScene = useCallback(async () => {
     if (!hasUserInteracted) {
-      handleUserInteraction();
+      await handleUserInteraction();
+      // For iOS, we need to wait for user interaction before speaking
+      if (isIOS) {
+        return;
+      }
     }
 
     if (isDescribing || !hasCameraAccess) {
@@ -160,7 +164,7 @@ export function CameraFeed() {
     } finally {
       setIsDescribing(false);
     }
-  }, [isDescribing, takeSnapshot, hasCameraAccess, speak, hasUserInteracted, handleUserInteraction]);
+  }, [isDescribing, takeSnapshot, hasCameraAccess, speak, hasUserInteracted, handleUserInteraction, isIOS]);
 
   // Initialize camera and voice commands
   useEffect(() => {
@@ -172,11 +176,11 @@ export function CameraFeed() {
     // Play welcome message only on first visit
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
     if (!hasVisitedBefore) {
-      // For Safari, we'll wait for user interaction before playing the welcome message
-      if (isSafari) {
+      // For Safari/iOS, we'll wait for user interaction before playing the welcome message
+      if (isSafari || isIOS) {
         const playWelcomeMessage = () => {
           speak("Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.");
-          // Remove the event listener after playing the message
+          // Remove the event listeners after playing the message
           document.removeEventListener('click', playWelcomeMessage);
           document.removeEventListener('touchstart', playWelcomeMessage);
         };
@@ -203,7 +207,7 @@ export function CameraFeed() {
         streamRef.current = null;
       }
     };
-  }, [startCamera, describeScene, speak, isSafari]);
+  }, [startCamera, describeScene, speak, isSafari, isIOS]);
 
   return (
     <div 
@@ -262,7 +266,7 @@ export function CameraFeed() {
       {/* Control panel */}
       <ControlPanel 
         describeScene={describeScene} 
-        isDisabled={isDescribing || isLoading || !!cameraError}
+        isDisabled={isDescribing || isLoading || !!cameraError || (isIOS && !hasUserInteracted)}
       />
     </div>
   );

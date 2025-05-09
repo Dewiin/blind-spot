@@ -5,27 +5,31 @@ export const useSpeech = () => {
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSafari, setIsSafari] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const audioContextRef = useRef(null);
   const voicesLoadedRef = useRef(false);
   const hasUserInteractedRef = useRef(false);
   const utteranceQueueRef = useRef([]);
   const isProcessingQueueRef = useRef(false);
 
-  // Detect Safari
+  // Detect Safari and iOS
   useEffect(() => {
     const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     setIsSafari(isSafariBrowser);
+    setIsIOS(isIOSDevice);
   }, []);
 
-  // Initialize audio context for Safari
+  // Initialize audio context for Safari/iOS
   useEffect(() => {
-    if (isSafari && !audioContextRef.current) {
+    if ((isSafari || isIOS) && !audioContextRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext();
     }
-  }, [isSafari]);
+  }, [isSafari, isIOS]);
 
-  // Load available voices with improved Safari handling
+  // Load available voices with improved Safari/iOS handling
   useEffect(() => {
     const loadVoices = () => {
       const availableVoices = window.speechSynthesis.getVoices();
@@ -42,9 +46,9 @@ export const useSpeech = () => {
       }
     };
 
-    // Handle voice loading differently for Safari
-    if (isSafari) {
-      // Safari needs multiple attempts to load voices
+    // Handle voice loading differently for Safari/iOS
+    if (isSafari || isIOS) {
+      // Safari/iOS needs multiple attempts to load voices
       let attempts = 0;
       const maxAttempts = 10;
       
@@ -67,7 +71,7 @@ export const useSpeech = () => {
       }
       loadVoices();
     }
-  }, [isSafari]);
+  }, [isSafari, isIOS]);
 
   // Process utterance queue
   const processQueue = useCallback(() => {
@@ -99,12 +103,19 @@ export const useSpeech = () => {
       }
     };
 
-    window.speechSynthesis.speak(utterance);
-  }, []);
+    // For iOS, we need to ensure the audio context is running
+    if (isIOS && audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume().then(() => {
+        window.speechSynthesis.speak(utterance);
+      }).catch(console.error);
+    } else {
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [isIOS]);
 
   // Initialize audio context on user interaction
   const initializeAudioContext = useCallback(async () => {
-    if (isSafari && audioContextRef.current && audioContextRef.current.state === 'suspended') {
+    if ((isSafari || isIOS) && audioContextRef.current && audioContextRef.current.state === 'suspended') {
       try {
         await audioContextRef.current.resume();
         hasUserInteractedRef.current = true;
@@ -112,11 +123,17 @@ export const useSpeech = () => {
         console.error('Failed to resume audio context:', e);
       }
     }
-  }, [isSafari]);
+  }, [isSafari, isIOS]);
 
   const speak = useCallback(async (text, options = {}) => {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported');
+      return;
+    }
+
+    // For iOS, ensure we have user interaction
+    if (isIOS && !hasUserInteractedRef.current) {
+      console.warn('Speech synthesis requires user interaction on iOS');
       return;
     }
 
@@ -125,8 +142,8 @@ export const useSpeech = () => {
     utteranceQueueRef.current = [];
     isProcessingQueueRef.current = false;
 
-    // For Safari, ensure audio context is running
-    if (isSafari) {
+    // For Safari/iOS, ensure audio context is running
+    if (isSafari || isIOS) {
       await initializeAudioContext();
     }
 
@@ -141,7 +158,7 @@ export const useSpeech = () => {
       if (selectedVoice) {
         utterance.voice = selectedVoice;
       }
-      utterance.rate = options.rate || 1.15;
+      utterance.rate = options.rate || 1.10;
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
 
@@ -151,15 +168,15 @@ export const useSpeech = () => {
     setIsSpeaking(true);
 
     // Start processing the queue
-    if (isSafari) {
-      // Add a small delay for Safari
+    if (isSafari || isIOS) {
+      // Add a small delay for Safari/iOS
       setTimeout(() => {
         processQueue();
       }, 100);
     } else {
       processQueue();
     }
-  }, [selectedVoice, isSafari, initializeAudioContext, processQueue]);
+  }, [selectedVoice, isSafari, isIOS, initializeAudioContext, processQueue]);
 
   const stop = useCallback(() => {
     if (window.speechSynthesis) {
@@ -194,6 +211,7 @@ export const useSpeech = () => {
     selectedVoice,
     setSelectedVoice,
     isSafari,
+    isIOS,
     initializeAudioContext
   };
 }; 
