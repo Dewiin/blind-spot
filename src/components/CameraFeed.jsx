@@ -178,17 +178,6 @@ export function CameraFeed() {
       .then(response => response.json())
       .then(data => console.log(data))
       .catch(error => console.error('Error pinging server:', error));
-
-    
-    fetch(`${backendUrl}/ping`)
-      .then(response => response.json())
-      .then(data => console.log(data))
-      .catch(error => console.error('Error pinging server:', error));
-
-    fetch(`${backendUrl}/ping`)
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error('Error pinging server:', error));
     
     // Initialize voice commands
     const cleanupVoice = voiceCommands({ describeScene });
