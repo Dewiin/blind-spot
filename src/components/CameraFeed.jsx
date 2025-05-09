@@ -188,7 +188,7 @@ export function CameraFeed() {
       // For Safari/iOS, we'll wait for user interaction before playing the welcome message
       if (isSafari || isIOS) {
         const playWelcomeMessage = () => {
-          speak("Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.");
+          speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
           // Remove the event listeners after playing the message
           document.removeEventListener('click', playWelcomeMessage);
           document.removeEventListener('touchstart', playWelcomeMessage);
@@ -198,7 +198,7 @@ export function CameraFeed() {
         document.addEventListener('click', playWelcomeMessage);
         document.addEventListener('touchstart', playWelcomeMessage);
       } else {
-        speak("Welcome to Blind-Spot, say describe, describe the scene, or tap the screen to get Started.");
+        speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
       }
       sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
     }
