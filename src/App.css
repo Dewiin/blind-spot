@@ -1,5 +1,5 @@
 #root {
-  margin: 0 auto;
+  margin: 0;
   padding: 0;
 }
 .wholePage {
@@ -10,7 +10,8 @@
 }
 .infoBar {
   width: 100%;
-  padding: 10px;
+  padding: 1rem;
+  margin: 1vh 0;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -18,10 +19,9 @@
 }
 
 .mainBody {
+  background-color: #4d4d4d;
   width: 100%;
   padding: 20px;
-  border: 1px solid;
-  border-radius: 50px;
   box-sizing: border-box;
   text-align: center;
 }
@@ -44,7 +44,13 @@
 }
 
 @media (max-width: 450px) {
+  .infoBar {
+    margin: 0;
+  }
   .video-element {
-    height: 400px;
+    height: 350px;
+  }
+  :root {
+    font-size: 1.3em;
   }
 } 
