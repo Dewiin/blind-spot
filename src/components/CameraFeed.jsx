@@ -235,7 +235,6 @@ export function CameraFeed() {
             ref={videoRef} 
             className="video-element"
             width="100%" 
-            height="auto" 
             autoPlay 
             playsInline 
             muted 

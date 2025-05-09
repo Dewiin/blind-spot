@@ -19,13 +19,14 @@
 
 .mainBody {
   width: 100%;
-  margin-top: 2rem;
   padding: 20px;
+  border: 1px solid;
+  border-radius: 50px;
   box-sizing: border-box;
   text-align: center;
 }
 
-.mainBody video {
+.video-element {
   border-radius: 20px;
 }
 
@@ -37,3 +38,13 @@
   height: 100vh;
   z-index: 10;
 }
+
+.description-panel > p {
+  margin: 0;
+}
+
+@media (max-width: 450px) {
+  .video-element {
+    height: 400px;
+  }
+} 
