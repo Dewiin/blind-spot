@@ -307,6 +307,12 @@ def create_app():
             "status": "ok",
             "version": "1.0.0"
         })
+        
+    @app.route('/ping', methods=['GET'])
+    def ping_pong():
+        """A simple endpoint to check if the server is alive and 'warm up'."""
+        logger.info("Ping request received")
+        return jsonify({'message': 'pong!'}), 200
     
     # API documentation
     @app.route("/", methods=["GET"])
