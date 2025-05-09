@@ -307,7 +307,8 @@ def create_app():
             "status": "ok",
             "version": "1.0.0"
         })
-        
+
+    # Ping endpoint
     @app.route('/ping', methods=['GET'])
     def ping_pong():
         """A simple endpoint to check if the server is alive and 'warm up'."""
