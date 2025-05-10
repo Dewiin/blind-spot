@@ -3,48 +3,6 @@ import { voiceCommands } from "../utils/voiceCommands";
 import { ControlPanel } from "./ControlPanel";
 import { useSpeech } from "../utils/useSpeech";
 
-// 🔊 TEST BUTTON to check iOS TTS
-function SpeechTestButton() {
-  const handleTap = async () => {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === "suspended") {
-      await ctx.resume();
-    }
-
-    const utterance = new SpeechSynthesisUtterance("This is a test message for iPhone.");
-    const voices = speechSynthesis.getVoices();
-    utterance.voice = voices.find(v => v.lang.startsWith('en')) || null;
-
-    if (voices.length === 0) {
-      speechSynthesis.addEventListener("voiceschanged", () => {
-        utterance.voice = speechSynthesis.getVoices().find(v => v.lang.startsWith('en')) || null;
-        speechSynthesis.speak(utterance);
-      }, { once: true });
-    } else {
-      speechSynthesis.speak(utterance);
-    }
-  };
-
-  return (
-    <button 
-      onClick={handleTap} 
-      style={{
-        position: "absolute",
-        top: 10,
-        left: 10,
-        zIndex: 999,
-        backgroundColor: "#222",
-        color: "white",
-        padding: "10px",
-        border: "none",
-        borderRadius: "5px"
-      }}
-    >
-      🔊 Tap for iOS Speech Test
-    </button>
-  );
-}
-
 export function CameraFeed() {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -55,21 +13,28 @@ export function CameraFeed() {
   const [hasCameraAccess, setHasCameraAccess] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
   
+  // Initialize speech synthesis with new iOS flag
   const { speak, isSafari, isIOS, initializeAudioContext } = useSpeech();
+
+  // backend url
   const backendUrl = 'https://api.blind-spot.app';
 
+  // Handle user interaction
   const handleUserInteraction = useCallback(async () => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
+      // Initialize audio context for iOS Safari
       if (isSafari || isIOS) {
         await initializeAudioContext();
       }
     }
   }, [hasUserInteracted, isSafari, isIOS, initializeAudioContext]);
 
+  // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Request camera with preferred settings
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: "environment", 
@@ -80,19 +45,20 @@ export function CameraFeed() {
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        streamRef.current = stream;
+        streamRef.current = stream; // Store reference for cleanup
         setCameraError(null);
-        setHasCameraAccess(true);
+        setHasCameraAccess(true); // Set camera access to true
       }
     } catch (error) {
       console.error("Error accessing the camera:", error);
       setCameraError(error.message || "Unable to access camera");
-      setHasCameraAccess(false);
+      setHasCameraAccess(false); // Set camera access to false
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // Memoized snapshot function
   const takeSnapshot = useCallback(() => {
     if (!videoRef.current || videoRef.current.readyState < 3) {
       console.warn("Video not ready for snapshot");
@@ -115,7 +81,7 @@ export function CameraFeed() {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const imageUrl = canvas.toDataURL("image/jpeg", 0.9);
+      const imageUrl = canvas.toDataURL("image/jpeg", 0.9); // JPEG with 90% quality for better performance
       return imageUrl;
     } catch (err) {
       console.error("Error taking snapshot:", err);
@@ -123,14 +89,18 @@ export function CameraFeed() {
     }
   }, []);
 
+  // Improved scene description with proper API error handling
   const describeScene = useCallback(async () => {
     if (!hasUserInteracted) {
       await handleUserInteraction();
-      if (isIOS) return;
+      // For iOS, we need to wait for user interaction before speaking
+      if (isIOS) {
+        return;
+      }
     }
 
     if (isDescribing || !hasCameraAccess) {
-      if (!hasCameraAccess) {
+      if(!hasCameraAccess) {
         speak("No camera access available. Please check camera permissions.");
         setLastDescription("No camera access available. Please check camera permissions.");
       }
@@ -139,12 +109,14 @@ export function CameraFeed() {
 
     setIsDescribing(true);
     const imageUrl = takeSnapshot();
+
     if (!imageUrl) {
       setIsDescribing(false);
       return;
     }
 
     try {
+      // Convert base64 URL to Blob
       const fetchResponse = await fetch(imageUrl);
       const blob = await fetchResponse.blob();
 
@@ -152,15 +124,17 @@ export function CameraFeed() {
       formData.append('image', blob, 'snapshot.jpg');
 
       const url = `${backendUrl}/describe`;
+      
+      // Use AbortController for request timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
-
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
         signal: controller.signal
       });
-
+      
       clearTimeout(timeoutId);
 
       if (!response.ok) {
@@ -179,12 +153,15 @@ export function CameraFeed() {
       }
     } catch (error) {
       console.error("Scene description error:", error);
+      
+      // More user-friendly error messages
       let errorMessage = "Failed to describe the scene.";
       if (error.name === 'AbortError') {
         errorMessage = "Request timed out. Please try again.";
       } else if (error.message.includes("NetworkError")) {
         errorMessage = "Network error. Please check your connection.";
       }
+      
       setLastDescription(`Error: ${errorMessage}`);
       speak(errorMessage);
     } finally {
@@ -192,47 +169,54 @@ export function CameraFeed() {
     }
   }, [isDescribing, takeSnapshot, hasCameraAccess, speak, hasUserInteracted, handleUserInteraction, isIOS]);
 
+  // Initialize camera and voice commands
   useEffect(() => {
     startCamera();
 
+    // Ping the server to warm up
     fetch(`${backendUrl}/ping`)
       .then(response => response.json())
       .then(data => console.log(data))
       .catch(error => console.error('Error pinging server:', error));
     
+    // Initialize voice commands
     const cleanupVoice = voiceCommands({ describeScene });
-
+    
+    // Play welcome message only on first visit
     const hasVisitedBefore = sessionStorage.getItem('hasVisitedSceneDescriptor');
-
     if (!hasVisitedBefore) {
-      const tryDescribeAfterInteraction = async () => {
-        if (isIOS || isSafari) {
-          if (hasUserInteracted) {
-            await initializeAudioContext();
-            speak("Welcome to Blind-Spot. Analyzing the scene now.");
-            describeScene();
-            sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
-          }
-        } else {
-          speak("Welcome to Blind-Spot. Analyzing the scene now.");
-          describeScene();
-          sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
-        }
-      };
-
-      tryDescribeAfterInteraction();
+      // For Safari/iOS, we'll wait for user interaction before playing the welcome message
+      if (isSafari || isIOS) {
+        const playWelcomeMessage = () => {
+          speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
+          // Remove the event listeners after playing the message
+          document.removeEventListener('click', playWelcomeMessage);
+          document.removeEventListener('touchstart', playWelcomeMessage);
+        };
+        
+        // Add event listeners for user interaction
+        document.addEventListener('click', playWelcomeMessage);
+        document.addEventListener('touchstart', playWelcomeMessage);
+      } else {
+        speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
+      }
+      sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
     }
-
+    
+    // Cleanup function
     return () => {
+      // Clean up voice commands
       if (cleanupVoice && typeof cleanupVoice === 'function') {
         cleanupVoice();
       }
+      
+      // Stop camera stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
       }
     };
-  }, [startCamera, describeScene, speak, isSafari, isIOS, hasUserInteracted, initializeAudioContext]);
+  }, [startCamera, describeScene, speak, isSafari, isIOS]);
 
   return (
     <div 
@@ -240,42 +224,54 @@ export function CameraFeed() {
       onClick={handleUserInteraction}
       onTouchStart={handleUserInteraction}
     >
-      <SpeechTestButton />
-
+      {/* Camera feed with loading and error states */}
       <div className="video-container" aria-live="polite">
-        {isLoading && <div className="loading-indicator">Initializing camera...</div>}
-        {cameraError && (
-          <div className="error-message" role="alert">
-            <p>Camera error: {cameraError}</p>
-            <button onClick={startCamera} className="retry-button" aria-label="Retry camera access">
-              Retry
-            </button>
-          </div>
-        )}
-        <video 
-          ref={videoRef} 
-          className="video-element"
-          width="100%" 
-          autoPlay 
-          playsInline 
-          muted 
-          onLoadedMetadata={() => setIsLoading(false)}
-          aria-label="Live camera feed"
-        />
+        <>
+          {isLoading && <div className="loading-indicator">Initializing camera...</div>}
+          {cameraError && (
+            <div className="error-message" role="alert">
+              <p>Camera error: {cameraError}</p>
+              <button 
+                onClick={startCamera} 
+                className="retry-button"
+                aria-label="Retry camera access"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          <video 
+            ref={videoRef} 
+            className="video-element"
+            width="100%" 
+            autoPlay 
+            playsInline 
+            muted 
+            onLoadedMetadata={() => setIsLoading(false)}
+            aria-label="Live camera feed"
+          />
+        </>
       </div>
 
+      {/* Description display with semantic markup */}
       {lastDescription && (
-        <div className="description-panel" aria-live="polite" role="status">
+        <div 
+          className="description-panel" 
+          aria-live="polite" 
+          role="status"
+        >
           <p>{lastDescription}</p>
         </div>
       )}
 
+      {/* Progress indicator */}
       {isDescribing && (
         <div className="progress-indicator" aria-live="polite">
           <p>Analyzing scene...</p>
         </div>
       )}
 
+      {/* Control panel */}
       <ControlPanel 
         describeScene={describeScene} 
         isDisabled={isDescribing || isLoading || !!cameraError || (isIOS && !hasUserInteracted)}
