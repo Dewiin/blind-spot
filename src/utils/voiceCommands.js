@@ -2,6 +2,9 @@ export function voiceCommands({ describeScene }) {
     const isSpeechRecognitionSupported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition = null;
+    let isAndroid = /android/i.test(navigator.userAgent);
+    let restartAttempts = 0;
+    const MAX_RESTART_ATTEMPTS = 3;
   
     if (isSpeechRecognitionSupported) {
         recognition = new SpeechRecognition();
@@ -32,18 +35,41 @@ export function voiceCommands({ describeScene }) {
             console.error('Speech recognition error:', event.error);
             if (event.error === 'not-allowed') {
                 console.warn('Microphone access denied');
+            } else if (event.error === 'no-speech') {
+                // Don't restart on no-speech errors
+                return;
+            }
+            
+            // Only attempt to restart on certain errors
+            if (['audio-capture', 'network', 'service-not-allowed'].includes(event.error)) {
+                handleRestart();
             }
         };
   
         recognition.onend = () => {
-            // Restart recognition if it ends unexpectedly
-            if (recognition) {
-                try {
-                    recognition.start();
-                } catch (e) {
-                    console.warn('Failed to restart speech recognition:', e);
-                }
+            // Only restart if it wasn't explicitly stopped
+            if (recognition && !recognition.explicitlyStopped) {
+                handleRestart();
             }
+        };
+
+        const handleRestart = () => {
+            if (restartAttempts >= MAX_RESTART_ATTEMPTS) {
+                console.warn('Max restart attempts reached, stopping recognition');
+                return;
+            }
+
+            // Add delay before restarting to prevent rapid cycling
+            setTimeout(() => {
+                if (recognition) {
+                    try {
+                        recognition.start();
+                        restartAttempts++;
+                    } catch (e) {
+                        console.warn('Failed to restart speech recognition:', e);
+                    }
+                }
+            }, isAndroid ? 1000 : 100); // Longer delay for Android
         };
   
         // Start recognition
@@ -60,6 +86,7 @@ export function voiceCommands({ describeScene }) {
     return () => {
         if (recognition) {
             try {
+                recognition.explicitlyStopped = true;
                 recognition.stop();
             } catch (e) {
                 console.warn('Error stopping speech recognition:', e);
@@ -67,4 +94,4 @@ export function voiceCommands({ describeScene }) {
             recognition = null;
         }
     };
-  }
+}
