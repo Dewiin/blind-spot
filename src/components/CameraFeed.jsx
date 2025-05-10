@@ -187,21 +187,25 @@ export function CameraFeed() {
     if (!hasVisitedBefore) {
       // For Safari/iOS, we'll wait for user interaction before playing the welcome message
       if (isSafari || isIOS) {
-        const playWelcomeMessage = () => {
-          speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
-          // Remove the event listeners after playing the message
+        const playWelcomeMessage = async () => {
+          try {
+            await initializeAudioContext(); // ✅ NEW: unlock iOS audio
+            speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get started.");
+          } catch (err) {
+            console.error("Audio context init or speech failed:", err);
+          }
+    
           document.removeEventListener('click', playWelcomeMessage);
           document.removeEventListener('touchstart', playWelcomeMessage);
         };
-        
-        // Add event listeners for user interaction
         document.addEventListener('click', playWelcomeMessage);
         document.addEventListener('touchstart', playWelcomeMessage);
       } else {
-        speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
+        speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get started.");
       }
       sessionStorage.setItem('hasVisitedSceneDescriptor', 'true');
     }
+    
     
     // Cleanup function
     return () => {
