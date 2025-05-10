@@ -23,8 +23,8 @@ export function CameraFeed() {
   const handleUserInteraction = useCallback(async () => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
-      // Initialize audio context for iOS Safari
-      if (isSafari || isIOS) {
+      // Initialize audio context for iOS Safari only if not already initialized
+      if ((isSafari || isIOS) && !audioContextRef.current) {
         await initializeAudioContext();
       }
     }
@@ -32,6 +32,11 @@ export function CameraFeed() {
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
+    // Don't restart if we already have a working stream
+    if (streamRef.current && videoRef.current?.srcObject) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Request camera with preferred settings
