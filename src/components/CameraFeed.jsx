@@ -228,6 +228,36 @@ export function CameraFeed() {
       onClick={handleUserInteraction}
       onTouchStart={handleUserInteraction}
     >
+      {/* ✅ iOS Safari: Tap to start audio */}
+      {isIOS && !hasUserInteracted && (
+        <div
+          className="ios-start-overlay"
+          onClick={async () => {
+            await handleUserInteraction(); // Unlock audio context
+            speak("Welcome to Blind-Spot. Say 'describe the scene' or tap to start.");
+          }}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            backgroundColor: "rgba(0, 0, 0, 0.8)",
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+            fontSize: "1.5rem",
+            textAlign: "center",
+            padding: "1rem",
+            cursor: "pointer"
+          }}
+        >
+          Tap anywhere to start Blind-Spot
+        </div>
+      )}
+  
       {/* Camera feed with loading and error states */}
       <div className="video-container" aria-live="polite">
         <>
@@ -256,7 +286,7 @@ export function CameraFeed() {
           />
         </>
       </div>
-
+  
       {/* Description display with semantic markup */}
       {lastDescription && (
         <div 
@@ -267,19 +297,19 @@ export function CameraFeed() {
           <p>{lastDescription}</p>
         </div>
       )}
-
+  
       {/* Progress indicator */}
       {isDescribing && (
         <div className="progress-indicator" aria-live="polite">
           <p>Analyzing scene...</p>
         </div>
       )}
-
+  
       {/* Control panel */}
       <ControlPanel 
         describeScene={describeScene} 
         isDisabled={isDescribing || isLoading || !!cameraError || (isIOS && !hasUserInteracted)}
       />
     </div>
-  );
+  );  
 }
