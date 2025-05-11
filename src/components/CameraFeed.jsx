@@ -28,15 +28,22 @@ export function CameraFeed() {
         try {
           await initializeAudioContext();
           // Test speech synthesis after initialization
-          const testUtterance = new SpeechSynthesisUtterance('');
+          const testUtterance = new SpeechSynthesisUtterance('Initializing speech');
+          testUtterance.onend = () => {
+            console.log('Test utterance completed');
+            // Now try the welcome message
+            speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
+          };
+          testUtterance.onerror = (error) => {
+            console.error('Test utterance failed:', error);
+          };
           window.speechSynthesis.speak(testUtterance);
-          window.speechSynthesis.cancel(); // Cancel the test utterance
         } catch (error) {
           console.error('Failed to initialize audio context:', error);
         }
       }
     }
-  }, [hasUserInteracted, isSafari, isIOS, initializeAudioContext]);
+  }, [hasUserInteracted, isSafari, isIOS, initializeAudioContext, speak]);
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
@@ -198,7 +205,6 @@ export function CameraFeed() {
         const playWelcomeMessage = async () => {
           try {
             await handleUserInteraction();
-            speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
           } catch (error) {
             console.error('Failed to play welcome message:', error);
           }

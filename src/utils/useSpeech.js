@@ -104,6 +104,7 @@ export const useSpeech = () => {
     const utterance = utteranceQueueRef.current[0];
 
     utterance.onend = () => {
+      console.log('Queue item completed');
       utteranceQueueRef.current.shift();
       isProcessingQueueRef.current = false;
       if (utteranceQueueRef.current.length > 0) {
@@ -126,10 +127,15 @@ export const useSpeech = () => {
 
     // For iOS, we need to ensure the audio context is running
     if (isIOS && audioContextRef.current && audioContextRef.current.state === 'suspended') {
+      console.log('Resuming audio context for iOS');
       audioContextRef.current.resume().then(() => {
+        console.log('Audio context resumed, speaking now');
         window.speechSynthesis.speak(utterance);
-      }).catch(console.error);
+      }).catch(error => {
+        console.error('Failed to resume audio context:', error);
+      });
     } else {
+      console.log('Speaking without audio context resume');
       window.speechSynthesis.speak(utterance);
     }
   }, [isIOS]);
@@ -149,12 +155,17 @@ export const useSpeech = () => {
   const speak = useCallback(async (text, options = {}) => {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported');
+      alert('Speech synthesis not supported on this device');
       return;
     }
+
+    console.log('Speech attempt:', { isIOS, hasUserInteracted: hasUserInteractedRef.current, text });
+    alert('Attempting to speak: ' + text); // Temporary debug alert
 
     // For iOS, ensure we have user interaction
     if (isIOS && !hasUserInteractedRef.current) {
       console.warn('Speech synthesis requires user interaction on iOS');
+      alert('Please tap the screen first to enable speech');
       return;
     }
 
@@ -165,7 +176,27 @@ export const useSpeech = () => {
 
     // For Safari/iOS, ensure audio context is running
     if (isSafari || isIOS) {
-      await initializeAudioContext();
+      try {
+        await initializeAudioContext();
+        // Force a small test utterance to ensure speech is working
+        const testUtterance = new SpeechSynthesisUtterance('Testing speech');
+        testUtterance.onstart = () => {
+          console.log('Test utterance started');
+          alert('Test speech started'); // Temporary debug alert
+        };
+        testUtterance.onend = () => {
+          console.log('Test utterance completed');
+          alert('Test speech completed'); // Temporary debug alert
+        };
+        testUtterance.onerror = (event) => {
+          console.error('Test utterance error:', event);
+          alert('Test speech error: ' + event.error); // Temporary debug alert
+        };
+        window.speechSynthesis.speak(testUtterance);
+      } catch (error) {
+        console.error('Failed to initialize audio context:', error);
+        alert('Failed to initialize audio: ' + error.message); // Temporary debug alert
+      }
     }
 
     // Split text into chunks for better handling
@@ -183,6 +214,22 @@ export const useSpeech = () => {
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
 
+      // Add debug logging for iOS
+      if (isIOS) {
+        utterance.onstart = () => {
+          console.log('Utterance started:', chunk);
+          alert('Started speaking: ' + chunk); // Temporary debug alert
+        };
+        utterance.onend = () => {
+          console.log('Utterance ended:', chunk);
+          alert('Finished speaking: ' + chunk); // Temporary debug alert
+        };
+        utterance.onerror = (event) => {
+          console.error('Utterance error:', event, chunk);
+          alert('Speech error: ' + event.error); // Temporary debug alert
+        };
+      }
+
       utteranceQueueRef.current.push(utterance);
     });
 
@@ -190,10 +237,12 @@ export const useSpeech = () => {
 
     // Start processing the queue
     if (isSafari || isIOS) {
-      // Add a small delay for Safari/iOS
+      // Add a longer delay for Safari/iOS
       setTimeout(() => {
+        console.log('Starting speech queue processing');
+        alert('Starting speech queue'); // Temporary debug alert
         processQueue();
-      }, 100);
+      }, 300);
     } else {
       processQueue();
     }
