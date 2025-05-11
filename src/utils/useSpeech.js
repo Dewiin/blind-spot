@@ -205,54 +205,54 @@ export const useSpeech = () => {
             await audioContextRef.current.resume();
             alert('Audio context resumed');
           }
-          // Create and play a silent sound to ensure audio context is active
-          const oscillator = audioContextRef.current.createOscillator();
-          const gainNode = audioContextRef.current.createGain();
-          gainNode.gain.value = 0; // Silent
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContextRef.current.destination);
-          oscillator.start();
-          oscillator.stop(audioContextRef.current.currentTime + 0.001);
         }
 
-        // Create the most basic utterance possible
-        const utterance = new SpeechSynthesisUtterance('Testing speech synthesis');
-        
-        // Set basic properties
-        utterance.rate = 0.8;  // Slightly slower for better reliability
-        utterance.pitch = 1.0; // Normal pitch
-        utterance.volume = 1.0; // Full volume
-        
-        // Try to find an English voice
-        const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
-        if (englishVoice) {
-          utterance.voice = englishVoice;
-          alert('Using voice: ' + englishVoice.name);
+        // Try to find available English voices
+        const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
+        alert('Found ' + englishVoices.length + ' English voices');
+
+        // Try each English voice in sequence
+        for (const voice of englishVoices) {
+          alert('Trying voice: ' + voice.name);
+          
+          const utterance = new SpeechSynthesisUtterance('Testing voice ' + voice.name);
+          utterance.voice = voice;
+          utterance.rate = 0.8;
+          utterance.pitch = 1.0;
+          utterance.volume = 1.0;
+
+          // Add event listeners
+          utterance.onstart = () => alert('Voice ' + voice.name + ' started');
+          utterance.onend = () => {
+            alert('Voice ' + voice.name + ' ended');
+            // If this voice worked, try the main text
+            setTimeout(() => {
+              const mainUtterance = new SpeechSynthesisUtterance(text);
+              mainUtterance.voice = voice;
+              mainUtterance.rate = 0.8;
+              mainUtterance.pitch = 1.0;
+              mainUtterance.volume = 1.0;
+              mainUtterance.onstart = () => alert('Main speech started with ' + voice.name);
+              mainUtterance.onend = () => alert('Main speech ended');
+              mainUtterance.onerror = (event) => alert('Main speech error: ' + event.error);
+              window.speechSynthesis.speak(mainUtterance);
+            }, 1000);
+          };
+          utterance.onerror = (event) => alert('Voice ' + voice.name + ' error: ' + event.error);
+
+          // Try to speak with this voice
+          window.speechSynthesis.speak(utterance);
+          
+          // Wait for this voice to finish before trying the next one
+          await new Promise(resolve => {
+            utterance.onend = () => {
+              resolve();
+            };
+            utterance.onerror = () => {
+              resolve();
+            };
+          });
         }
-
-        // Add basic event listeners
-        utterance.onstart = () => alert('Speech started');
-        utterance.onend = () => alert('Speech ended');
-        utterance.onerror = (event) => alert('Speech error: ' + event.error);
-
-        // Try to speak
-        alert('About to speak...');
-        window.speechSynthesis.speak(utterance);
-
-        // If that works, try the actual text
-        setTimeout(() => {
-          const mainUtterance = new SpeechSynthesisUtterance(text);
-          mainUtterance.rate = 0.8;
-          mainUtterance.pitch = 1.0;
-          mainUtterance.volume = 1.0;
-          if (englishVoice) {
-            mainUtterance.voice = englishVoice;
-          }
-          mainUtterance.onstart = () => alert('Main speech started');
-          mainUtterance.onend = () => alert('Main speech ended');
-          mainUtterance.onerror = (event) => alert('Main speech error: ' + event.error);
-          window.speechSynthesis.speak(mainUtterance);
-        }, 1000);
 
       } catch (error) {
         console.error('Speech synthesis error:', error);
