@@ -26,6 +26,27 @@ export const useSpeech = () => {
     if ((isSafari || isIOS) && !audioContextRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext();
+      
+      // Resume audio context on any user interaction
+      const resumeAudioContext = async () => {
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+          try {
+            await audioContextRef.current.resume();
+            hasUserInteractedRef.current = true;
+          } catch (e) {
+            console.error('Failed to resume audio context:', e);
+          }
+        }
+      };
+
+      // Add event listeners for user interaction
+      document.addEventListener('click', resumeAudioContext);
+      document.addEventListener('touchstart', resumeAudioContext);
+      
+      return () => {
+        document.removeEventListener('click', resumeAudioContext);
+        document.removeEventListener('touchstart', resumeAudioContext);
+      };
     }
   }, [isSafari, isIOS]);
 
@@ -56,7 +77,7 @@ export const useSpeech = () => {
         loadVoices();
         if (!voicesLoadedRef.current && attempts < maxAttempts) {
           attempts++;
-          setTimeout(attemptLoadVoices, 200);
+          setTimeout(attemptLoadVoices, 500); // Increased delay for iOS
         }
       };
       

@@ -25,7 +25,15 @@ export function CameraFeed() {
       setHasUserInteracted(true);
       // Initialize audio context for iOS Safari
       if (isSafari || isIOS) {
-        await initializeAudioContext();
+        try {
+          await initializeAudioContext();
+          // Test speech synthesis after initialization
+          const testUtterance = new SpeechSynthesisUtterance('');
+          window.speechSynthesis.speak(testUtterance);
+          window.speechSynthesis.cancel(); // Cancel the test utterance
+        } catch (error) {
+          console.error('Failed to initialize audio context:', error);
+        }
       }
     }
   }, [hasUserInteracted, isSafari, isIOS, initializeAudioContext]);
@@ -187,8 +195,13 @@ export function CameraFeed() {
     if (!hasVisitedBefore) {
       // For Safari/iOS, we'll wait for user interaction before playing the welcome message
       if (isSafari || isIOS) {
-        const playWelcomeMessage = () => {
-          speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
+        const playWelcomeMessage = async () => {
+          try {
+            await handleUserInteraction();
+            speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
+          } catch (error) {
+            console.error('Failed to play welcome message:', error);
+          }
           // Remove the event listeners after playing the message
           document.removeEventListener('click', playWelcomeMessage);
           document.removeEventListener('touchstart', playWelcomeMessage);
