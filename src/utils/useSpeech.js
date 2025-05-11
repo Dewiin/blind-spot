@@ -160,7 +160,7 @@ export const useSpeech = () => {
     }
 
     console.log('Speech attempt:', { isIOS, hasUserInteracted: hasUserInteractedRef.current, text });
-    alert('Attempting to speak: ' + text); // Temporary debug alert
+    alert('Attempting to speak: ' + text);
 
     // For iOS, ensure we have user interaction
     if (isIOS && !hasUserInteractedRef.current) {
@@ -171,33 +171,62 @@ export const useSpeech = () => {
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
+
+    // For iOS, use a simpler approach
+    if (isIOS) {
+      try {
+        // Create a single utterance for the entire text
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Set basic properties
+        utterance.rate = 1.0;  // Normal speed
+        utterance.pitch = 1.0; // Normal pitch
+        utterance.volume = 1.0; // Full volume
+        
+        // Get available voices
+        const voices = window.speechSynthesis.getVoices();
+        console.log('Available voices:', voices);
+        
+        // Try to find an English voice
+        const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+          console.log('Using voice:', englishVoice.name);
+        }
+
+        // Add event listeners
+        utterance.onstart = () => {
+          console.log('Speech started');
+          alert('Speech started');
+        };
+        
+        utterance.onend = () => {
+          console.log('Speech ended');
+          alert('Speech ended');
+        };
+        
+        utterance.onerror = (event) => {
+          console.error('Speech error:', event);
+          alert('Speech error: ' + event.error);
+        };
+
+        // Try to speak
+        window.speechSynthesis.speak(utterance);
+        
+        // For iOS, we need to keep the audio context alive
+        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
+      } catch (error) {
+        console.error('Speech synthesis error:', error);
+        alert('Speech error: ' + error.message);
+      }
+      return;
+    }
+
+    // For non-iOS devices, use the original queue-based approach
     utteranceQueueRef.current = [];
     isProcessingQueueRef.current = false;
-
-    // For Safari/iOS, ensure audio context is running
-    if (isSafari || isIOS) {
-      try {
-        await initializeAudioContext();
-        // Force a small test utterance to ensure speech is working
-        const testUtterance = new SpeechSynthesisUtterance('Testing speech');
-        testUtterance.onstart = () => {
-          console.log('Test utterance started');
-          alert('Test speech started'); // Temporary debug alert
-        };
-        testUtterance.onend = () => {
-          console.log('Test utterance completed');
-          alert('Test speech completed'); // Temporary debug alert
-        };
-        testUtterance.onerror = (event) => {
-          console.error('Test utterance error:', event);
-          alert('Test speech error: ' + event.error); // Temporary debug alert
-        };
-        window.speechSynthesis.speak(testUtterance);
-      } catch (error) {
-        console.error('Failed to initialize audio context:', error);
-        alert('Failed to initialize audio: ' + error.message); // Temporary debug alert
-      }
-    }
 
     // Split text into chunks for better handling
     const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
@@ -214,38 +243,11 @@ export const useSpeech = () => {
       utterance.pitch = options.pitch || 1.0;
       utterance.volume = options.volume || 1.0;
 
-      // Add debug logging for iOS
-      if (isIOS) {
-        utterance.onstart = () => {
-          console.log('Utterance started:', chunk);
-          alert('Started speaking: ' + chunk); // Temporary debug alert
-        };
-        utterance.onend = () => {
-          console.log('Utterance ended:', chunk);
-          alert('Finished speaking: ' + chunk); // Temporary debug alert
-        };
-        utterance.onerror = (event) => {
-          console.error('Utterance error:', event, chunk);
-          alert('Speech error: ' + event.error); // Temporary debug alert
-        };
-      }
-
       utteranceQueueRef.current.push(utterance);
     });
 
     setIsSpeaking(true);
-
-    // Start processing the queue
-    if (isSafari || isIOS) {
-      // Add a longer delay for Safari/iOS
-      setTimeout(() => {
-        console.log('Starting speech queue processing');
-        alert('Starting speech queue'); // Temporary debug alert
-        processQueue();
-      }, 300);
-    } else {
-      processQueue();
-    }
+    processQueue();
   }, [selectedVoice, isSafari, isIOS, initializeAudioContext, processQueue]);
 
   const stop = useCallback(() => {
