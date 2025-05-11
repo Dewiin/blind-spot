@@ -25,25 +25,10 @@ export function CameraFeed() {
       setHasUserInteracted(true);
       // Initialize audio context for iOS Safari
       if (isSafari || isIOS) {
-        try {
-          await initializeAudioContext();
-          // Test speech synthesis after initialization
-          const testUtterance = new SpeechSynthesisUtterance('Initializing speech');
-          testUtterance.onend = () => {
-            console.log('Test utterance completed');
-            // Now try the welcome message
-            speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
-          };
-          testUtterance.onerror = (error) => {
-            console.error('Test utterance failed:', error);
-          };
-          window.speechSynthesis.speak(testUtterance);
-        } catch (error) {
-          console.error('Failed to initialize audio context:', error);
-        }
+        await initializeAudioContext();
       }
     }
-  }, [hasUserInteracted, isSafari, isIOS, initializeAudioContext, speak]);
+  }, [hasUserInteracted, isSafari, isIOS, initializeAudioContext]);
 
   // Start camera with proper error handling and loading states
   const startCamera = useCallback(async () => {
@@ -202,12 +187,8 @@ export function CameraFeed() {
     if (!hasVisitedBefore) {
       // For Safari/iOS, we'll wait for user interaction before playing the welcome message
       if (isSafari || isIOS) {
-        const playWelcomeMessage = async () => {
-          try {
-            await handleUserInteraction();
-          } catch (error) {
-            console.error('Failed to play welcome message:', error);
-          }
+        const playWelcomeMessage = () => {
+          speak("Welcome to Blind-Spot, say describe the scene, or tap the screen to get Started.");
           // Remove the event listeners after playing the message
           document.removeEventListener('click', playWelcomeMessage);
           document.removeEventListener('touchstart', playWelcomeMessage);
