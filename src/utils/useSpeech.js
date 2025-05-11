@@ -26,35 +26,6 @@ export const useSpeech = () => {
     if ((isSafari || isIOS) && !audioContextRef.current) {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext();
-      
-      // Resume audio context on any user interaction
-      const resumeAudioContext = async () => {
-        if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-          try {
-            await audioContextRef.current.resume();
-            hasUserInteractedRef.current = true;
-            // Create and play a silent sound to ensure audio context is active
-            const oscillator = audioContextRef.current.createOscillator();
-            const gainNode = audioContextRef.current.createGain();
-            gainNode.gain.value = 0; // Silent
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContextRef.current.destination);
-            oscillator.start();
-            oscillator.stop(audioContextRef.current.currentTime + 0.001);
-          } catch (e) {
-            console.error('Failed to resume audio context:', e);
-          }
-        }
-      };
-
-      // Add event listeners for user interaction
-      document.addEventListener('click', resumeAudioContext);
-      document.addEventListener('touchstart', resumeAudioContext);
-      
-      return () => {
-        document.removeEventListener('click', resumeAudioContext);
-        document.removeEventListener('touchstart', resumeAudioContext);
-      };
     }
   }, [isSafari, isIOS]);
 
@@ -85,7 +56,7 @@ export const useSpeech = () => {
         loadVoices();
         if (!voicesLoadedRef.current && attempts < maxAttempts) {
           attempts++;
-          setTimeout(attemptLoadVoices, 500); // Increased delay for iOS
+          setTimeout(attemptLoadVoices, 200);
         }
       };
       
@@ -112,7 +83,6 @@ export const useSpeech = () => {
     const utterance = utteranceQueueRef.current[0];
 
     utterance.onend = () => {
-      console.log('Queue item completed');
       utteranceQueueRef.current.shift();
       isProcessingQueueRef.current = false;
       if (utteranceQueueRef.current.length > 0) {
@@ -135,15 +105,10 @@ export const useSpeech = () => {
 
     // For iOS, we need to ensure the audio context is running
     if (isIOS && audioContextRef.current && audioContextRef.current.state === 'suspended') {
-      console.log('Resuming audio context for iOS');
       audioContextRef.current.resume().then(() => {
-        console.log('Audio context resumed, speaking now');
         window.speechSynthesis.speak(utterance);
-      }).catch(error => {
-        console.error('Failed to resume audio context:', error);
-      });
+      }).catch(console.error);
     } else {
-      console.log('Speaking without audio context resume');
       window.speechSynthesis.speak(utterance);
     }
   }, [isIOS]);
@@ -163,107 +128,24 @@ export const useSpeech = () => {
   const speak = useCallback(async (text, options = {}) => {
     if (!window.speechSynthesis) {
       console.warn('Speech synthesis not supported');
-      alert('Speech synthesis not supported on this device');
       return;
     }
-
-    console.log('Speech attempt:', { isIOS, hasUserInteracted: hasUserInteractedRef.current, text });
-    alert('Attempting to speak: ' + text);
 
     // For iOS, ensure we have user interaction
     if (isIOS && !hasUserInteractedRef.current) {
       console.warn('Speech synthesis requires user interaction on iOS');
-      alert('Please tap the screen first to enable speech');
       return;
     }
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
-
-    // For iOS, use the most basic approach possible
-    if (isIOS) {
-      try {
-        // First, check if we can get voices
-        let voices = window.speechSynthesis.getVoices();
-        alert('Initial voices count: ' + voices.length);
-
-        // If no voices, wait for them to load
-        if (voices.length === 0) {
-          alert('Waiting for voices to load...');
-          await new Promise(resolve => {
-            window.speechSynthesis.onvoiceschanged = () => {
-              voices = window.speechSynthesis.getVoices();
-              alert('Voices loaded: ' + voices.length);
-              resolve();
-            };
-          });
-        }
-
-        // Ensure audio context is running
-        if (audioContextRef.current) {
-          if (audioContextRef.current.state === 'suspended') {
-            await audioContextRef.current.resume();
-            alert('Audio context resumed');
-          }
-        }
-
-        // Try to find available English voices
-        const englishVoices = voices.filter(voice => voice.lang.startsWith('en'));
-        alert('Found ' + englishVoices.length + ' English voices');
-
-        // Try each English voice in sequence
-        for (const voice of englishVoices) {
-          alert('Trying voice: ' + voice.name);
-          
-          const utterance = new SpeechSynthesisUtterance('Testing voice ' + voice.name);
-          utterance.voice = voice;
-          utterance.rate = 0.8;
-          utterance.pitch = 1.0;
-          utterance.volume = 1.0;
-
-          // Add event listeners
-          utterance.onstart = () => alert('Voice ' + voice.name + ' started');
-          utterance.onend = () => {
-            alert('Voice ' + voice.name + ' ended');
-            // If this voice worked, try the main text
-            setTimeout(() => {
-              const mainUtterance = new SpeechSynthesisUtterance(text);
-              mainUtterance.voice = voice;
-              mainUtterance.rate = 0.8;
-              mainUtterance.pitch = 1.0;
-              mainUtterance.volume = 1.0;
-              mainUtterance.onstart = () => alert('Main speech started with ' + voice.name);
-              mainUtterance.onend = () => alert('Main speech ended');
-              mainUtterance.onerror = (event) => alert('Main speech error: ' + event.error);
-              window.speechSynthesis.speak(mainUtterance);
-            }, 1000);
-          };
-          utterance.onerror = (event) => alert('Voice ' + voice.name + ' error: ' + event.error);
-
-          // Try to speak with this voice
-          window.speechSynthesis.speak(utterance);
-          
-          // Wait for this voice to finish before trying the next one
-          await new Promise(resolve => {
-            utterance.onend = () => {
-              resolve();
-            };
-            utterance.onerror = () => {
-              resolve();
-            };
-          });
-        }
-
-      } catch (error) {
-        console.error('Speech synthesis error:', error);
-        alert('Speech error: ' + error.message);
-      }
-      return;
-    }
-
-    // For non-iOS devices, use the original queue-based approach
     utteranceQueueRef.current = [];
     isProcessingQueueRef.current = false;
+
+    // For Safari/iOS, ensure audio context is running
+    if (isSafari || isIOS) {
+      await initializeAudioContext();
+    }
 
     // Split text into chunks for better handling
     const chunks = text.match(/[^.!?]+[.!?]+/g) || [text];
@@ -284,7 +166,16 @@ export const useSpeech = () => {
     });
 
     setIsSpeaking(true);
-    processQueue();
+
+    // Start processing the queue
+    if (isSafari || isIOS) {
+      // Add a small delay for Safari/iOS
+      setTimeout(() => {
+        processQueue();
+      }, 100);
+    } else {
+      processQueue();
+    }
   }, [selectedVoice, isSafari, isIOS, initializeAudioContext, processQueue]);
 
   const stop = useCallback(() => {
