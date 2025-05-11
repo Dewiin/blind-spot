@@ -13,13 +13,13 @@ export function CameraFeed() {
   const [hasCameraAccess, setHasCameraAccess] = useState(false);
   const [hasUserInteracted, setHasUserInteracted] = useState(false);
 
+  const backendUrl = 'https://api.blind-spot.app';
+
   const handleUserInteraction = useCallback(() => {
     if (!hasUserInteracted) {
       setHasUserInteracted(true);
     }
   }, [hasUserInteracted]);
-
-  const backendUrl = 'https://api.blind-spot.app';
 
   const startCamera = useCallback(async () => {
     if (streamRef.current && videoRef.current?.srcObject) return;
@@ -69,7 +69,7 @@ export function CameraFeed() {
   const describeScene = useCallback(async () => {
     if (!hasUserInteracted || isDescribing || !hasCameraAccess) {
       if (!hasCameraAccess) {
-        smartSpeak("error_no_camera", "No camera access available. Please check camera permissions.");
+        smartSpeak("error_no_camera", "No camera access available.");
         setLastDescription("No camera access available.");
       }
       return;

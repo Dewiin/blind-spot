@@ -70,8 +70,11 @@ function selectVoice(utterance, options = {}) {
   }
 }
 
+/**
+ * Speech synthesis can sometimes stop prematurely on longer text in some browsers.
+ */
 export function speakLongText(text, onComplete = null) {
-  const chunks = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
+  const chunks = text.match(/[^\\.!\?]+[\\.!\?]+/g) || [text];
   let currentIndex = 0;
 
   const speakNextChunk = () => {
@@ -103,19 +106,23 @@ export function speakLongText(text, onComplete = null) {
   };
 }
 
-// 🔊 Fallback: use pre-recorded audio file
+/**
+ * Play a pre-recorded audio file as fallback for iOS
+ */
 export function playAudio(id) {
   const audio = new Audio(`/audio/${id}.mp3`);
   audio.play().catch(err => console.error("Audio playback failed:", err));
 }
 
-// 🧠 Smart wrapper: choose TTS or audio fallback
+/**
+ * Smart wrapper that chooses between TTS or audio fallback based on platform
+ */
 export function smartSpeak(idOrText, fallbackText = null) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
   if (isIOS) {
-    playAudio(idOrText); // use /audio/[id].mp3
+    playAudio(idOrText); // e.g., smartSpeak("welcome")
   } else {
-    speakText(fallbackText || idOrText);
+    speakText(fallbackText || idOrText); // fallbackText: spoken sentence
   }
 }
