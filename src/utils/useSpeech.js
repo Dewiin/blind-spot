@@ -33,6 +33,14 @@ export const useSpeech = () => {
           try {
             await audioContextRef.current.resume();
             hasUserInteractedRef.current = true;
+            // Create and play a silent sound to ensure audio context is active
+            const oscillator = audioContextRef.current.createOscillator();
+            const gainNode = audioContextRef.current.createGain();
+            gainNode.gain.value = 0; // Silent
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContextRef.current.destination);
+            oscillator.start();
+            oscillator.stop(audioContextRef.current.currentTime + 0.001);
           } catch (e) {
             console.error('Failed to resume audio context:', e);
           }
@@ -172,16 +180,43 @@ export const useSpeech = () => {
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
-    // For iOS, use a simpler approach
+    // For iOS, use the most basic approach possible
     if (isIOS) {
       try {
-        // Get available voices first
-        const voices = window.speechSynthesis.getVoices();
-        console.log('Available voices:', voices);
-        alert('Found ' + voices.length + ' voices');
+        // First, check if we can get voices
+        let voices = window.speechSynthesis.getVoices();
+        alert('Initial voices count: ' + voices.length);
 
-        // Create a single utterance for the entire text
-        const utterance = new SpeechSynthesisUtterance(text);
+        // If no voices, wait for them to load
+        if (voices.length === 0) {
+          alert('Waiting for voices to load...');
+          await new Promise(resolve => {
+            window.speechSynthesis.onvoiceschanged = () => {
+              voices = window.speechSynthesis.getVoices();
+              alert('Voices loaded: ' + voices.length);
+              resolve();
+            };
+          });
+        }
+
+        // Ensure audio context is running
+        if (audioContextRef.current) {
+          if (audioContextRef.current.state === 'suspended') {
+            await audioContextRef.current.resume();
+            alert('Audio context resumed');
+          }
+          // Create and play a silent sound to ensure audio context is active
+          const oscillator = audioContextRef.current.createOscillator();
+          const gainNode = audioContextRef.current.createGain();
+          gainNode.gain.value = 0; // Silent
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContextRef.current.destination);
+          oscillator.start();
+          oscillator.stop(audioContextRef.current.currentTime + 0.001);
+        }
+
+        // Create the most basic utterance possible
+        const utterance = new SpeechSynthesisUtterance('Testing speech synthesis');
         
         // Set basic properties
         utterance.rate = 0.8;  // Slightly slower for better reliability
@@ -192,42 +227,32 @@ export const useSpeech = () => {
         const englishVoice = voices.find(voice => voice.lang.startsWith('en'));
         if (englishVoice) {
           utterance.voice = englishVoice;
-          console.log('Using voice:', englishVoice.name);
           alert('Using voice: ' + englishVoice.name);
-        } else {
-          alert('No English voice found, using default');
         }
 
-        // Add event listeners
-        utterance.onstart = () => {
-          console.log('Speech started');
-          alert('Speech started - should hear audio now');
-        };
-        
-        utterance.onend = () => {
-          console.log('Speech ended');
-          alert('Speech ended');
-        };
-        
-        utterance.onerror = (event) => {
-          console.error('Speech error:', event);
-          alert('Speech error: ' + event.error);
-        };
+        // Add basic event listeners
+        utterance.onstart = () => alert('Speech started');
+        utterance.onend = () => alert('Speech ended');
+        utterance.onerror = (event) => alert('Speech error: ' + event.error);
 
-        // For iOS, we need to ensure the audio context is running
-        if (audioContextRef.current) {
-          if (audioContextRef.current.state === 'suspended') {
-            await audioContextRef.current.resume();
-            alert('Audio context resumed');
-          }
-          console.log('Audio context state:', audioContextRef.current.state);
-        }
+        // Try to speak
+        alert('About to speak...');
+        window.speechSynthesis.speak(utterance);
 
-        // Try to speak with a small delay
+        // If that works, try the actual text
         setTimeout(() => {
-          window.speechSynthesis.speak(utterance);
-          alert('Speech synthesis started');
-        }, 100);
+          const mainUtterance = new SpeechSynthesisUtterance(text);
+          mainUtterance.rate = 0.8;
+          mainUtterance.pitch = 1.0;
+          mainUtterance.volume = 1.0;
+          if (englishVoice) {
+            mainUtterance.voice = englishVoice;
+          }
+          mainUtterance.onstart = () => alert('Main speech started');
+          mainUtterance.onend = () => alert('Main speech ended');
+          mainUtterance.onerror = (event) => alert('Main speech error: ' + event.error);
+          window.speechSynthesis.speak(mainUtterance);
+        }, 1000);
 
       } catch (error) {
         console.error('Speech synthesis error:', error);
